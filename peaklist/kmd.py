@@ -1,30 +1,40 @@
-# from chemspipy import ChemSpider
-# from pyteomics import mass
-# from itertools import cycle
-# import re
 import collections
-# import os
 import itertools
+import os
+import pandas as pd
+import numpy as np
+from ToFCIMSAnalysis.mixins.chemical_formulas import chemical_formulas as cf
+from chemspipy import ChemSpider
+import json
 # import time
 # import array
 # import pyteomics
 # import sys
-# import csv
+import csv
 # import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-from cims_analysis.mixins.chemical_formulas import chemical_formulas as cf
-
+# from pyteomics import mass
+# from itertools import cycle
+# import re
 
 class KMD(cf):
 
-    def __init__(self, path):
+    def __init__(self, path, fname):
 
         cf.__init__(self)
 
         self.path = path
-        self.peaklist = pd.read_csv(self.path, sep="\t")[["ion","x0"]]
-        self.peaklist["integer_mass"] = [int(np.round(mass)) for mass in self.peaklist["x0"]]
+        self.fname = fname
+        
+        try:
+            self.peaklist = pd.read_csv(self.path + self.fname, sep="\t")[["ion","x0"]]
+            self.peaklist["integer_mass"] = [int(np.round(mass)) for mass in self.peaklist["x0"]]
+        except KeyError:
+            print "Warning: peaklist must have ion and x0 columns.\n Reinitialise object with valid peaklist."
+
+        self.out_matched_id_fname = "matched_ids_summary_" + self.fname.replace(".txt",".json")
+        self.updated_peaklist_fname = "updated_" + self.fname
+
+        self.cs = ChemSpider(os.environ["ChemSpiderSOAPToken"])
         
         # """
         # self.cs: str, ChemSpider instance
@@ -53,29 +63,6 @@ class KMD(cf):
         # self.suggested_errors: list of dicts,
         #                   for ith self.ion, ith suggested_compounds is the suggested error of the assignment
         # """
-
-        # self.cs = ChemSpider(os.environ["CHEM_SECURITY_TOKEN"])
-        # self.directory = ""
-        # self.fname = ""
-        # self.reagent_ion = reagent_ion
-        # self.kendrick_bases = kendrick_bases
-        # self.kendrick_base_mass = [self._Mass_calculator(mass) for mass in self.kendrick_bases]
-        # self.ion = None
-        # self.sumFormula = None
-        # self.x0 = None
-        # self.exact_mass_minus_reagent_ion = None
-        # self.integer_mass = None
-        # self.integer_mass_minus_reagent_ion = None
-        # self.mass_defect = None
-        # self.mass_defect_minus_reagent_ion = None
-        # self._KEM = {}
-        # self._KMD = {}
-        # self._KMD_error = {}
-        # self.KMD_matches = {}
-        # self.suggested_formulas = {}
-        # self.suggested_names = {}
-        # self.suggested_errors = {}
-
 
     def Kendrick_bases_apart(self, amu1, amu2, kendrick_base_amu):
 
@@ -156,14 +143,17 @@ class KMD(cf):
     def Match_peaks_on_kmd(self, kendrick_base):
 
         """
-        For each peak in peaklist.ion, the conditions for peaks that match for
-        the passed kendrick base are evaluated. Where the conditions are true,
-        extract the names of those peaks. Must run self._Calc_kendrick_mass_defect first to ensure
-        the relevent columns are there:
+        For each peak in peaklist.ion, the conditions for 
+        peaks that match for the passed kendrick base are 
+        evaluated. Where the conditions are true, extract 
+        the names of those peaks and put into match_col_name
+        in self.peaklist.
         + kendrick_base. str.
         """
 
+        print "Matching Peaks on kendrick base {}".format(kendrick_base)
         # if kendrick mass defect column isnt present then make it
+
         if "KMD_"+kendrick_base not in self.peaklist.columns:
             self.Calculate_kendrick_mass_defect(kendrick_base)
 
@@ -203,9 +193,11 @@ class KMD(cf):
         for i, name in enumerate(self.peaklist['ion']):
             match_mask = list(isMatch[i,:])
             matches = [p for p, s in itertools.izip(list(self.peaklist["ion"]), match_mask) if s]
+            matches.remove(name)
             match_column.append(str(matches).replace("[","").replace("]","").replace("'",""))
+            
         self.peaklist[match_col_name] = match_column
-
+        self.peaklist.to_csv(self.updated_peaklist_fname, sep="\t")
 
     def Find_unknown_formula(self, known_formula, unknown_mass, kendrick_base):
 
@@ -225,7 +217,6 @@ class KMD(cf):
         kendrick_base_exact_mass = self.Mass(kendrick_base)
         kendrick_base_elements = self.Count_elements(kendrick_base)
 
-
         all_elements = formula_elements.copy()
         all_elements.update(kendrick_base_elements)
 
@@ -238,8 +229,8 @@ class KMD(cf):
             # new dictionary that multiplies the kendrick_bases
             # elements by how many repeating kmd bases there are
             kendrick_base_update = collections.Counter()
-            for el in kendrick_base_elements:
-                kendrick_base_update[el] = int(kendrick_base_elements[el] * -kmd_units)
+            for kendrick_base_element in kendrick_base_elements:
+                kendrick_base_update[kendrick_base_element] = int(kendrick_base_elements[kendrick_base_element] * -kmd_units)
 
             # update unknown_formula_elements to contain suggested formula
             unknown_formula_elements = collections.Counter()
@@ -260,27 +251,89 @@ class KMD(cf):
         return str(estimated)
 
 
-#     def _Is_formula_realistic(self, suggested_formula):
+    def Output_matched_identities(self, unknown_pattern):
 
-#         """
-#         Takes a suggested formula and returns true if it 
-#         passes the conditions posed here. Takes into account 
-#         realistic structure and visiblity by CIMS. returns Bool.
-#         This is the function that decides if what the solver 
-#         has returned is rubbish or not.
-#         """
+        """
+        After matching has been performed the guess of the identity can be made.
+        # Outputs a seperate .json file with the following format:
+        {unknown_peak :
+            kendrick_base : {
+                suggesting_formula : suggested_formula
+            }
+        }
+        If the suggesting_formula is Null/None. Then the suggesting_formula does
+        not return a sensible value after running self.Find_unknown_formula. These
+        entries are left in as they describe which unknown masses are n kendrick_bases
+        away from the other unknown masses.
+        + unkown_pattern. str. Id's unknown peak names e.g. 'unknown'
+        """
 
-#         suggested_formula = self._Remove_reagent_ion(suggested_formula)
-#         suggested_formula = self._Counted_elements_to_formula(suggested_formula)
-#         list_of_compounds = self.cs.simple_search_by_formula(suggested_formula)
+        print "Finding matched identities"
+        # Collect all unknown peaks in a list.
+        unknowns = [name for name in self.peaklist['ion'] if unknown_pattern in name]
+        # Extract from peaklist which KMDs were used.
+        kendrick_base_cols = [kb for kb in self.peaklist.columns if "_matches" in kb]
+        # initalise empty data structure
+        matched_id_data = {}
+        # For each unknown
+        for unknown in unknowns:
+            # extract the unknown mass
+            unknown_row = self.peaklist.loc[self.peaklist["ion"] == unknown]
+            unknown_mass = unknown_row["x0"]
+            # create an entry in the datastructure that contains a dict of kb keys and empty list values
+            matched_id_data[unknown] = {kb.replace("KMD_","").replace("_matches","") : ["empty"] for kb in kendrick_base_cols}
+            # For each kendrick base
+            for kb in kendrick_base_cols:
+                # initialise empty list in which to append the name of the compound that suggested identity
+                evidence = {}
+                # for each suggesting peak
+                for entry in unknown_row[kb]:
+                    # if there are matches
+                    if len(entry) != 0:
+                        suggestors = entry.split(", ")
+                        for suggestor in suggestors:
+                            # get the unknown formula this 
+                            # will fall over if the suggestor
+                            # doesnt fit within the confines of 
+                            # Find_unknown_formula
+                            try:
+                                value = self.Find_unknown_formula(suggestor,
+                                                                  unknown_mass,
+                                                                  kb.replace("KMD_","").replace("_matches","")
+                                                                  )
+                            except Exception as e:
+                                value = None
+                            evidence[suggestor] = value 
+                
+                matched_id_data[unknown][kb.replace("KMD_","").replace("_matches","")] = evidence
+        
+        with open("./"+self.out_matched_id_fname, 'w') as fp:
+            json.dump(matched_id_data, fp, ensure_ascii=False, indent=2)
 
-#         return_val = 1
-#         if len(list_of_compounds) < 1:
-#             return_val = 0
-#         if self._Is_hydrocarbon(suggested_formula):
-#             return_val = 0
+    # def Is_formula_realistic(self, suggested_formula):
 
-#         return return_val
+    #     """
+    #     Takes a suggested formula and returns true if it 
+    #     passes the conditions posed here. Takes into account 
+    #     realistic structure and visiblity by CIMS. returns Bool.
+    #     This is the function that decides if what the solver 
+    #     has returned is rubbish or not.
+    #     + suggested_formula. str.
+    #     """
+
+    #     # suggested_formula = self._Remove_reagent_ion(suggested_formula)
+    #     # suggested_formula = self.Counted_elements_to_formula(suggested_formula)
+    #     list_of_compounds = self.cs.simple_search_by_formula(suggested_formula)
+
+    #     condition_for_unrealistic_formula = (len(list_of_compounds) < 1) & \
+    #                                         (self.Is_hydrocarbon(suggested_formula))
+
+    #     realistic_formula = True
+    #     if condition_for_unrealistic_formula:
+    #         realistic_formula = False
+
+    #     print suggested_formula, realistic_formula
+    #     return realistic_formula
 
 
 #     def _Matched(self, kendrick_base, known=True):
@@ -303,85 +356,6 @@ class KMD(cf):
 
 #         return matched
 
-
-#     def _Get_KMD_match_suggestions(self):
-
-#         """
-#         Works out what the matching peak could be based on the kendrick_base
-#         and returns a list of the unknown name, unknown mass and chemspider objects
-#         """
-
-#         print "Identifying compounds. This may take some time."
-
-#         # for each kendrick base
-#         for kendrick_base in self.kendrick_bases:
-
-#             self.suggested_formulas[kendrick_base] = [[] for x in self.ion]
-#             self.suggested_errors[kendrick_base] = [[] for x in self.ion]
-#             self.suggested_names[kendrick_base] = [[] for x in self.ion]
-
-#             print "Looking at matches for %s" % kendrick_base
-
-#             # find those KMD matches that are unknown
-#             matched_unknowns = self._Matched(kendrick_base, known=False)
-
-#             # for each of those uknowns
-#             for i, unknown in enumerate(matched_unknowns):
-
-#                 print "matching %d of %d unknowns" % (i+1, len(matched_unknowns))
-
-#                 # find the KMD matches that are known
-#                 matched_knowns = self._Matched(kendrick_base, known=True)
-
-#                 # for each of those knowns
-#                 guesses_formulas = []
-#                 guesses_names = []
-#                 guesses_errors = []
-
-#                 for known in matched_knowns:
-
-#                     unknown_index = self.ion.index(unknown)
-#                     unknown_mass = self.x0[unknown_index]
-
-#                     # get the suggested structure of the unknown that the known points to
-#                     suggested_formula = self._Calc_unknown_formula(known, unknown_mass, kendrick_base)
-
-#                     # igor if error is returned
-#                     if not suggested_formula[0:5] == "error":
-
-#                         # return true if structure is realistic
-#                         realistic = self._Is_formula_realistic(suggested_formula)
-
-#                         if not realistic:
-#                             pass
-
-#                         # Get formula without reagent ion
-#                         suggested_formula_noRI = self._Counted_elements_to_formula(self._Remove_reagent_ion(suggested_formula))
-
-#                         CScompounds = self.cs.simple_search_by_formula(suggested_formula_noRI)
-#                         suggested_names = self._Get_visible_compounds(CScompounds, names=True)
-
-#                         if suggested_names == []:
-#                             pass
-#                         else:
-
-#                             error = self._Error_on_assignment(suggested_formula, unknown_mass)
-
-#                             # put known and suggested pairs into list
-#                             guesses_formulas.append((known, suggested_formula))
-#                             guesses_errors.append((suggested_formula, error))
-#                             guesses_names.append((known, suggested_names))
-
-#                     else:
-#                         pass
-
-#                 # put lists of tuples of the known and suggested unknown
-#                 # into an object variable at the same index as the unknown
-#                 self.suggested_formulas[kendrick_base][unknown_index] = guesses_formulas
-#                 self.suggested_errors[kendrick_base][unknown_index] = guesses_errors
-#                 self.suggested_names[kendrick_base][unknown_index] = guesses_names
-
-#         print "finished matching"
 
     # def Error_on_assignment(self, suggested_formula, unknown_mass):
 
@@ -421,24 +395,25 @@ class KMD(cf):
 #         return ls
 
 
-#     def _Condition_for_visible(self, compound):
+    # def _Condition_for_visible(self, compound):
 
-#         """
-#         Condition for whether the suggested molecule is visible by CIMS.
-#         + Can't be dimer.
-#         + Can't have overall + or - charge.
-#         + Cant have partial charge.
-#         + No wierd character in name that is odd encoding of a greek letter
-#             (indicates non typical oxidation state)
-#         """
+    #     """
+    #     Condition for whether the suggested molecule is visible by CIMS.
+    #     . Can't be dimer.
+    #     . Can't have overall + or - charge.
+    #     . Cant have partial charge.
+    #     . No wierd character in name that is odd encoding of a greek letter
+    #         (indicates non typical oxidation state)
+    #     + compound. ChemspiderObject.
+    #     """
 
-#         neg_count = 0
-#         pos_count = 0
-#         for char in compound.smiles:
-#             if char == "-": neg_count += 1
-#             if char == "+": pos_count += 1
+    #     neg_count = 0
+    #     pos_count = 0
+    #     for char in compound.smiles:
+    #         if char == "-": neg_count += 1
+    #         if char == "+": pos_count += 1
 
-#         return ("." not in compound.smiles) and (neg_count == pos_count) and ("$" not in compound.common_name) and ("{" not in compound.common_name) and ("^" not in compound.common_name)
+    #     return ("." not in compound.smiles) and (neg_count == pos_count) and ("$" not in compound.common_name) and ("{" not in compound.common_name) and ("^" not in compound.common_name)
 
 
     # def _Weighted_guesses(self, known_formula, suggested_formula):
@@ -490,44 +465,23 @@ class KMD(cf):
     #     return new_peaklist
 
 
-#     def Assignment_info(self):
 
-#         """Collect estimated assignment info into dataframe"""
+    def Run(self):
 
-#         assignment_info = pd.DataFrame(columns = ["ion", "kendrick base", "suggested by", "suggested formula", "error / ppm", "names"])
+        """
+        Commandline interactive interface to run programme.
+        """
 
-#         i = 0
-#         for kendrick_base in self.kendrick_bases:
+        sniffer = csv.Sniffer()
+        # Match peaks on kendrick bases
+        kendrick_bases = raw_input("List your Kendrick bases: ")
+        dialect = sniffer.sniff(kendrick_bases)
+        kendrick_bases = kendrick_bases.split(dialect.delimiter)
+        [self.Match_peaks_on_kmd(kb.upper()) for kb in kendrick_bases]
+        print "Updated peaklist written to {}".format(self.updated_peaklist_fname)
 
-#             matched_unknowns = sorted(self._Matched(kendrick_base, known=False))
-
-#             for matched_unknown in matched_unknowns:
-
-#                 unknown_index = self.ion.index(matched_unknown)
-#                 formulas = self.suggested_formulas[kendrick_base][unknown_index]
-#                 errors = self.suggested_errors[kendrick_base][unknown_index]
-#                 names = self.suggested_names[kendrick_base][unknown_index]
-
-#                 for formula, error, name in zip(formulas, errors, names):
-
-#                     assignment_info.loc[i] = [matched_unknown, kendrick_base, formula[0].encode('utf-8'), formula[1].encode('utf-8'), round(error[1],4), str([x.encode('utf-8') for x in name[1]]).replace("'","").replace("[","").replace("]","")]
-#                     i +=1
-
-#         assignment_info = assignment_info.sort_values(by=["ion","kendrick base"])
-
-#         return assignment_info
-
-
-#     def Run(self):
-
-#         # Calculate mass defect
-#         self._Calc_mass_defect(self._Mass_calculator(self.reagent_ion))
-
-#         # # Calculate kendrick mass defects
-#         [self._Calc_kendrick_mass_defect(base, self.kendrick_base_mass[i]) for i, base in enumerate(self.kendrick_bases)]
-
-#         # Stage 1. Match kendrick mass defects - still unknown
-#         [self._Match_peaks_on_kmd(base) for base in self.kendrick_bases]
-
-#         # Stage2. Get suggested formulas and compounds for matches
-# self._Get_KMD_match_suggestions()
+        # Output the matches as a json file
+        unknown_pattern = raw_input("Enter common pattern of unknown ion names: ")
+        self.Output_matched_identities(unknown_pattern)
+        print "Matched identity summary written to {}".format(self.out_matched_id_fname)
+    

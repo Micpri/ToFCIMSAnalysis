@@ -1,2 +1,4 @@
 .ipynb_checkpoints
 code-snippets.ipynb
+*.pyc
+test_run.py

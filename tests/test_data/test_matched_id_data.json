@@ -1,0 +1,370 @@
+{
+  "m122": {
+    "CH2": {
+      "C2H6ON": "C3H8NO", 
+      "m222": null, 
+      "m322": null, 
+      "m132": null, 
+      "m122": null
+    }, 
+    "O": {
+      "C2H6ON": "C3H8NO", 
+      "m222": null, 
+      "m322": null, 
+      "m132": null, 
+      "m122": null
+    }
+  }, 
+  "m123": {
+    "CH2": {
+      "m223": null, 
+      "m133": null, 
+      "m323": null, 
+      "m113": null, 
+      "m123": null
+    }, 
+    "O": {
+      "m223": null, 
+      "m133": null, 
+      "m323": null, 
+      "m113": null, 
+      "m123": null
+    }
+  }, 
+  "m231": {
+    "CH2": {
+      "m331": null, 
+      "m231": null, 
+      "m221": null, 
+      "m131": null, 
+      "m211": null
+    }, 
+    "O": {
+      "m331": null, 
+      "m231": null, 
+      "m221": null, 
+      "m131": null, 
+      "m211": null
+    }
+  }, 
+  "m311": {
+    "CH2": {
+      "m331": null, 
+      "m311": null, 
+      "m321": null, 
+      "C2H6O": "C2H6O3", 
+      "m211": null
+    }, 
+    "O": {
+      "m331": null, 
+      "m311": null, 
+      "m321": null, 
+      "C2H6O": "C2H6O3", 
+      "m211": null
+    }
+  }, 
+  "m223": {
+    "CH2": {
+      "m223": null, 
+      "m233": null, 
+      "m323": null, 
+      "m213": null, 
+      "m123": null
+    }, 
+    "O": {
+      "m223": null, 
+      "m233": null, 
+      "m323": null, 
+      "m213": null, 
+      "m123": null
+    }
+  }, 
+  "m222": {
+    "CH2": {
+      "m222": null, 
+      "m232": null, 
+      "m322": null, 
+      "m122": null, 
+      "C2H6O2N": "C3H8NO2"
+    }, 
+    "O": {
+      "m222": null, 
+      "m232": null, 
+      "m322": null, 
+      "m122": null, 
+      "C2H6O2N": "C3H8NO2"
+    }
+  }, 
+  "m221": {
+    "CH2": {
+      "m231": null, 
+      "m221": null, 
+      "m211": null, 
+      "C3H8O": "C3H8O2", 
+      "m321": null
+    }, 
+    "O": {
+      "m231": null, 
+      "m221": null, 
+      "m211": null, 
+      "C3H8O": "C3H8O2", 
+      "m321": null
+    }
+  }, 
+  "m322": {
+    "CH2": {
+      "m222": null, 
+      "m332": null, 
+      "m322": null, 
+      "m122": null, 
+      "m312": null
+    }, 
+    "O": {
+      "m222": null, 
+      "m332": null, 
+      "m322": null, 
+      "m122": null, 
+      "m312": null
+    }
+  }, 
+  "m323": {
+    "CH2": {
+      "m223": null, 
+      "m313": null, 
+      "m333": null, 
+      "m323": null, 
+      "m123": null
+    }, 
+    "O": {
+      "m223": null, 
+      "m313": null, 
+      "m333": null, 
+      "m323": null, 
+      "m123": null
+    }
+  }, 
+  "m321": {
+    "CH2": {
+      "m331": null, 
+      "m221": null, 
+      "C3H8O": "C3H8O3", 
+      "m311": null, 
+      "m321": null
+    }, 
+    "O": {
+      "m331": null, 
+      "m221": null, 
+      "C3H8O": "C3H8O3", 
+      "m311": null, 
+      "m321": null
+    }
+  }, 
+  "m133": {
+    "CH2": {
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m113": null, 
+      "m123": null
+    }, 
+    "O": {
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m113": null, 
+      "m123": null
+    }
+  }, 
+  "m132": {
+    "CH2": {
+      "C2H6ON": "C4H10NO", 
+      "m232": null, 
+      "m332": null, 
+      "m132": null, 
+      "m122": null
+    }, 
+    "O": {
+      "C2H6ON": "C4H10NO", 
+      "m232": null, 
+      "m332": null, 
+      "m132": null, 
+      "m122": null
+    }
+  }, 
+  "m131": {
+    "CH2": {
+      "m331": null, 
+      "m231": null, 
+      "C3H8O": "C4H10O", 
+      "C2H6O": "C4H10O", 
+      "m131": null
+    }, 
+    "O": {
+      "m331": null, 
+      "m231": null, 
+      "C3H8O": "C4H10O", 
+      "C2H6O": "C4H10O", 
+      "m131": null
+    }
+  }, 
+  "m113": {
+    "CH2": {
+      "m313": null, 
+      "m133": null, 
+      "m213": null, 
+      "m113": null, 
+      "m123": null
+    }, 
+    "O": {
+      "m313": null, 
+      "m133": null, 
+      "m213": null, 
+      "m113": null, 
+      "m123": null
+    }
+  }, 
+  "m313": {
+    "CH2": {
+      "m313": null, 
+      "m333": null, 
+      "m213": null, 
+      "m113": null, 
+      "m323": null
+    }, 
+    "O": {
+      "m313": null, 
+      "m333": null, 
+      "m213": null, 
+      "m113": null, 
+      "m323": null
+    }
+  }, 
+  "m312": {
+    "CH2": {
+      "C2H6ON": "C2H6NO3", 
+      "m312": null, 
+      "m332": null, 
+      "m322": null, 
+      "C2H6O2N": "C2H6NO3"
+    }, 
+    "O": {
+      "C2H6ON": "C2H6NO3", 
+      "m312": null, 
+      "m332": null, 
+      "m322": null, 
+      "C2H6O2N": "C2H6NO3"
+    }
+  }, 
+  "m232": {
+    "CH2": {
+      "m222": null, 
+      "m232": null, 
+      "m332": null, 
+      "m132": null, 
+      "C2H6O2N": "C4H10NO2"
+    }, 
+    "O": {
+      "m222": null, 
+      "m232": null, 
+      "m332": null, 
+      "m132": null, 
+      "C2H6O2N": "C4H10NO2"
+    }
+  }, 
+  "m233": {
+    "CH2": {
+      "m223": null, 
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m213": null
+    }, 
+    "O": {
+      "m223": null, 
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m213": null
+    }
+  }, 
+  "m331": {
+    "CH2": {
+      "m331": null, 
+      "m231": null, 
+      "m311": null, 
+      "m131": null, 
+      "m321": null
+    }, 
+    "O": {
+      "m331": null, 
+      "m231": null, 
+      "m311": null, 
+      "m131": null, 
+      "m321": null
+    }
+  }, 
+  "m333": {
+    "CH2": {
+      "m313": null, 
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m323": null
+    }, 
+    "O": {
+      "m313": null, 
+      "m333": null, 
+      "m233": null, 
+      "m133": null, 
+      "m323": null
+    }
+  }, 
+  "m332": {
+    "CH2": {
+      "m312": null, 
+      "m232": null, 
+      "m332": null, 
+      "m322": null, 
+      "m132": null
+    }, 
+    "O": {
+      "m312": null, 
+      "m232": null, 
+      "m332": null, 
+      "m322": null, 
+      "m132": null
+    }
+  }, 
+  "m213": {
+    "CH2": {
+      "m313": null, 
+      "m223": null, 
+      "m233": null, 
+      "m213": null, 
+      "m113": null
+    }, 
+    "O": {
+      "m313": null, 
+      "m223": null, 
+      "m233": null, 
+      "m213": null, 
+      "m113": null
+    }
+  }, 
+  "m211": {
+    "CH2": {
+      "m231": null, 
+      "m311": null, 
+      "m221": null, 
+      "C2H6O": "C2H6O2", 
+      "m211": null
+    }, 
+    "O": {
+      "m231": null, 
+      "m311": null, 
+      "m221": null, 
+      "C2H6O": "C2H6O2", 
+      "m211": null
+    }
+  }
+}

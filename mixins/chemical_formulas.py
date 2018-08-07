@@ -3,7 +3,7 @@ import pyteomics
 import collections
 import numpy as np
 import pandas as pd
-from cims_analysis.constants.elements import Elements
+from ToFCIMSAnalysis.constants.elements import Elements
 
 class chemical_formulas(Elements):
 

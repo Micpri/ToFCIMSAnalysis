@@ -1,15 +1,17 @@
 import unittest
-from cims_analysis.peaklist.kmd import KMD
+from ToFCIMSAnalysis.peaklist.kmd import KMD
 import collections
 import numpy as np
 import pandas as pd
 import os
+import time
+import json
 
 class TestClass(unittest.TestCase, KMD):
 
 	def setUp(self):
 
-		KMD.__init__(self, path=".\\tests\\test_data\\test_peaklist.txt")
+		KMD.__init__(self, path=".\\tests\\test_data\\",fname="test_peaklist.txt")
 		
 		self.MD = [
 			-0.041865,
@@ -161,83 +163,119 @@ class TestClass(unittest.TestCase, KMD):
 			'm133, m233, m333'
    		]
 
+		with open('.\\tests\\test_data\\test_matched_id_data.json') as f:
+			self.matched_id_data = json.load(f)
+
+
 	def tearDown(self):
 		pass
 
+	# def test_ChemSpiderInstance(self):
+        
+	# 	assert isinstance(self.peaklist, pd.DataFrame)
+
 	def test_selfdotpeaklist_type(self):
         
-		assert isinstance(self.peaklist, pd.DataFrame)
+		self.assertIsInstance(self.peaklist, pd.DataFrame)
 
 	def test_selfdotpeaklist_cols(self):
 
-		assert list(self.peaklist.columns) == ["ion","x0","integer_mass"]
+		self.assertListEqual(list(self.peaklist.columns), ["ion","x0","integer_mass"])
 
 	def test_Kendrick_bases_apart(self):
 
 		answer = self.Kendrick_bases_apart(14.0,28.0,14.0)
-		assert answer == -1
+		self.assertEqual(answer, -1)
 
 	def test_F_amu_apart(self):
 
 		answer = self.F_amu_apart(14.0,28.0,14.0)
-		assert answer 
+		self.assertTrue(answer)
 
 	def test_F_within_error_type1(self):
 		
 		answer = self.F_within_error(10, 1, 9, 2)
-		assert answer
+		self.assertTrue(answer)
 
 	def test_F_within_error_type2(self):
 		
 		answer = self.F_within_error(10, 1, 10, 1)
-		assert answer
+		self.assertTrue(answer)
 
 	def test_F_within_error_type3(self):
 		
 		answer = self.F_within_error(10, 1, 10, 2)
-		assert answer
+		self.assertTrue(answer)
 
 	def test_F_within_error_type4(self):
 		
 		answer = self.F_within_error(10, 2, 9, 1)
-		assert answer
+		self.assertTrue(answer)
 
 	def test_F_within_error_False(self):
 		
 		answer = self.F_within_error(20, 1, 10, 1)
-		assert not answer
+		self.assertFalse(answer)
 
 	def test_Calculate_mass_defect(self):
 		
 		self.Calculate_mass_defect()
-		assert list(self.peaklist["MD"]) == self.MD
+		self.assertListEqual(list(self.peaklist["MD"]), self.MD)
 
 	def test_Calculate_kendrick_mass_defect_CH2(self):
 		
 		self.Calculate_kendrick_mass_defect("CH2")
-		assert list(self.peaklist["KMD_CH2"]) == self.KMD_CH2
+		self.assertListEqual(list(self.peaklist["KMD_CH2"]), self.KMD_CH2)
 
 	def test_Calculate_kendrick_mass_defect_CH2e(self):
 		
 		self.Calculate_kendrick_mass_defect("CH2")
-		assert list(self.peaklist["e_KMD_CH2"]) == self.e_KMD_CH2
+		self.assertListEqual(list(self.peaklist["e_KMD_CH2"]), self.e_KMD_CH2)
 
 	def test_Match_peaks_on_kmd_CH2(self):
 		
 		self.Match_peaks_on_kmd("CH2")
-		assert list(self.peaklist["KMD_CH2_matches"].values) == self.KMD_CH2_matches
+		self.assertListEqual(list(self.peaklist["KMD_CH2_matches"].values), self.KMD_CH2_matches)
 
 	def test_Match_peaks_on_kmd_O(self):
 		
 		self.Match_peaks_on_kmd("O")
-		assert list(self.peaklist["KMD_O_matches"].values) == self.KMD_O_matches
+		self.assertListEqual(list(self.peaklist["KMD_O_matches"].values), self.KMD_O_matches)
 
 	def test_Find_unknown_formula_2CH2_positive(self):
 
 		answer = self.Find_unknown_formula("C2H4O", self.Mass("C4H8O"), "CH2")
-		assert answer == "C4H8O"
+		self.assertEqual(answer, "C4H8O")
 
 	def test_Find_unknown_formula_2O_negative(self):
 
 		answer = self.Find_unknown_formula("C2H4O5", self.Mass("C2H4O3"), "O")
-		assert answer == "C2H4O3"
+		self.assertEqual(answer, "C2H4O3")
+
+	def test_Output_matched_identities(self):
+
+		# initialise columns in peaklist
+		[self.Match_peaks_on_kmd(kb) for kb in ["O","CH2"]]
+		# run method to test
+		self.Output_matched_identities("m")
+		# load list to check against
+		with open('.\\matched_id_data.json') as f:
+			matched_id_data = json.load(f)
+		self.assertDictEqual(self.matched_id_data, matched_id_data)
+		os.remove("matched_id_data.json")
+
+
+
+
+
+
+
+
+
+	# def test_Is_formula_realistic_True(self):
+
+	# 	assert not self.Is_formula_realistic("CH2O2")
+
+	# def test_Is_formula_realistic_False(self):
+
+	# 	assert not self.Is_formula_realistic("C20H1")

@@ -1,5 +1,5 @@
 import unittest
-from cims_analysis.mixins.chemical_formulas import chemical_formulas as cf
+from ToFCIMSAnalysis.mixins.chemical_formulas import chemical_formulas as cf
 import collections
 import numpy as np
 import pandas as pd
@@ -28,15 +28,15 @@ class TestClass(unittest.TestCase, cf):
 
     def test_Flatten_F(self):
        
-        assert isinstance(self.list_of_lists[0], list)
+        self.assertIsInstance(self.list_of_lists[0], list)
 
     def test_Flatten_T(self):
 
-        assert isinstance(self._Flatten(self.list_of_lists)[0], int)
+        self.assertIsInstance(self._Flatten(self.list_of_lists)[0], int)
 
     def test__Remove_substring(self):
 
-        assert self._Remove_substring("I.C6H6O6-",["-"]) == "I.C6H6O6"
+        self.assertEqual(self._Remove_substring("I.C6H6O6-",["-"]), "I.C6H6O6")
 
     def test_Count_elements_C6H6O6(self):
 
@@ -72,111 +72,111 @@ class TestClass(unittest.TestCase, cf):
 
         ordered_dict = collections.OrderedDict(self.C6H6O6)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6O6"
+        self.assertEqual(answer, "C6H6O6")
  
     def test_Counted_elements_to_formula_C6H6O6N(self):
 
         ordered_dict = collections.OrderedDict(self.C6H6O6N)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6NO6"
+        self.assertEqual(answer, "C6H6NO6")
 
     def test_Counted_elements_to_formula_C6H6O6N0(self):
 
         ordered_dict = collections.OrderedDict(self.C6H6O6N0)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6O6"
+        self.assertEqual(answer, "C6H6O6")
 
     def test_Counted_elements_to_formula_IdotC6H6O6(self):
 
         ordered_dict = collections.OrderedDict(self.IdotC6H6O6)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6IO6"
+        self.assertEqual(answer, "C6H6IO6")
 
     def test_Counted_elements_to_formula_IdotC6H6O6N(self):
 
         ordered_dict = collections.OrderedDict(self.IdotC6H6O6N)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6INO6"
+        self.assertEqual(answer, "C6H6INO6")
 
     def test_Counted_elements_to_formula_IdotC6H6O6N0(self):
 
         ordered_dict = collections.OrderedDict(self.IdotC6H6O6N0)
         answer = self.Counted_elements_to_formula(ordered_dict)
-        assert answer == "C6H6IO6"
+        self.assertEqual(answer, "C6H6IO6")
 
     def test_Remove_reagent_ion_I(self):
 
-        assert self.Remove_reagent_ion("I.C6H6O6") == "C6H6O6"
+        self.assertEqual(self.Remove_reagent_ion("I.C6H6O6"), "C6H6O6")
 
     def test_Remove_reagent_ion_NO3(self):
 
-        assert self.Remove_reagent_ion("NO3.C6H6O6") == "C6H6O6"
+        self.assertEqual(self.Remove_reagent_ion("NO3.C6H6O6"), "C6H6O6")
 
     def test_Add_reagent_ion_I(self):
 
-        assert self.Add_reagent_ion("C6H6O6", "I") == "I.C6H6O6"
+        self.assertEqual(self.Add_reagent_ion("C6H6O6", "I"), "I.C6H6O6")
  
     def test_Add_reagent_ion_NO3(self):
 
-        assert self.Add_reagent_ion("C6H6O6", "NO3") == "NO3.C6H6O6"
+        self.assertEqual(self.Add_reagent_ion("C6H6O6", "NO3"), "NO3.C6H6O6")
 
     def test_Mass_I(self):
 
-        assert round(self.Mass("I"), 6) == 126.904477
+        self.assertEqual(round(self.Mass("I"), 6), 126.904477)
 
     def test_Mass_CH2O2(self):
 
-        assert round(self.Mass("CH2O2"), 6) == 46.005480
+        self.assertEqual(round(self.Mass("CH2O2"), 6), 46.005480)
 
     def test_Mass_defect_12C(self):
 
         assert self.Mass_defect(12.0000) == 0.0
-        assert isinstance(self.Mass_defect(12.0000), float) 
+        self.assertIsInstance(self.Mass_defect(12.0000), float) 
 
     def test_Mass_defect_16O2(self):
 
         assert self.Mass_defect(2*15.994915) == 2*0.005085
-        assert isinstance(self.Mass_defect(2*15.994915), float) 
+        self.assertIsInstance(self.Mass_defect(2*15.994915), float) 
 
     def test_Kendrick_mass_defect_CH2(self):
 
         answer = self.Kendrick_mass_defect(2*14.015650, 14.015650, 20.0)
-        assert answer[0] == 0.0
+        self.assertEqual(answer[0], 0.0)
 
     def test_Kendrick_mass_defect_CH2_e(self):
 
         answer = self.Kendrick_mass_defect(14.015650, 2*14.015650, 20.0)
-        assert answer[1] == 0.00028
+        self.assertEqual(answer[1], 0.00028)
 
     def test_Element_ratios_C12H6O6N6(self):
 
         OtoC, HtoC, NtoC = self.Element_ratios("C12H6O6N6")
-        assert OtoC == 0.5
-        assert HtoC == 0.5
-        assert NtoC == 0.5
+        self.assertEqual(OtoC, 0.5)
+        self.assertEqual(HtoC, 0.5)
+        self.assertEqual(NtoC, 0.5)
 
     def test_Element_ratios_missing_N(self):
 
         OtoC, HtoC, NtoC = self.Element_ratios("C6H6O6")
-        assert np.isnan(NtoC)
+        self.assertTrue(np.isnan(NtoC))
 
     def test_Is_hydrocarbon_C6H6O6(self):
 
-        assert not self.Is_hydrocarbon("C6H6O6")
+        self.assertFalse(self.Is_hydrocarbon("C6H6O6"))
 
     def test_Is_hydrocarbon_C6H6O6(self):
 
-        assert self.Is_hydrocarbon("C6H6")
+        self.assertTrue(self.Is_hydrocarbon("C6H6"))
 
     def test_Osc(self):
 
         Osc = self.Osc(0.5, 0.5, 0.5)
-        assert Osc == -2.0
+        self.assertEqual(Osc, -2.0)
 
     def test_Osc_noN(self):
 
         Osc = self.Osc(0.5, 0.5)
-        assert Osc == 0.5
+        self.assertEqual(Osc, 0.5)
 
     def test_element_frequency(self):
 
