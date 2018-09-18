@@ -306,7 +306,7 @@ class Elements(object):
 		}
 
 
-	def Get_mass(self, key):
+	def GetMass(self, key):
 
 		"""
 		Handles default_masses.

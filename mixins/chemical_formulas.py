@@ -1,8 +1,10 @@
 import re
+import matplotlib
 import pyteomics
 import collections
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from ToFCIMSAnalysis.constants.elements import Elements
 
 class chemical_formulas(Elements):
@@ -25,7 +27,7 @@ class chemical_formulas(Elements):
         return [item for sublist in list_of_lists for item in sublist]
 
 
-    def _Remove_substring(self, string, list_of_substrings):
+    def _RemoveSubstring(self, string, list_of_substrings):
 
         """
         Remove list of substrings from string.
@@ -38,7 +40,7 @@ class chemical_formulas(Elements):
         return string
 
 
-    def Count_elements(self, moiety):
+    def CountElements(self, moiety):
 
         """
         Returns dict with keys of elements and values of number of elements.
@@ -61,7 +63,7 @@ class chemical_formulas(Elements):
         return dic
 
 
-    def Counted_elements_to_formula(self, ordered_dict):
+    def CountedElementsToFormula(self, ordered_dict):
 
         """
         Takes an ordered dictionary of counted elements from 
@@ -84,7 +86,7 @@ class chemical_formulas(Elements):
         return string
 
 
-    def Remove_reagent_ion(self, formula):
+    def RemoveReagentIon(self, formula):
 
         """
         Takes a chemical formula string and removes the reagent ion.
@@ -96,7 +98,7 @@ class chemical_formulas(Elements):
         return formula.split(".")[1]
 
 
-    def Add_reagent_ion(self, formula, reagent_ion):
+    def AddReagentIon(self, formula, reagent_ion):
 
         """
         Takes a chemical formula string and removes the reagent ion.
@@ -115,14 +117,14 @@ class chemical_formulas(Elements):
         + moiety: str.
         """
 
-        counted_elements = self.Count_elements(moiety)
+        counted_elements = self.CountElements(moiety)
         exact_mass = 0
         for key, value in counted_elements.iteritems():            
-            exact_mass += (self.Get_mass(key) * value)
+            exact_mass += (self.GetMass(key) * value)
         return round(exact_mass, 6)
 
 
-    def Mass_defect(self, exact_mass):
+    def MassDefect(self, exact_mass):
 
         """
         Calculates the mass defect for a given exact mass.
@@ -134,7 +136,7 @@ class chemical_formulas(Elements):
         return round(mass_defect, 8)
 
 
-    def Kendrick_mass_defect(self, moiety_exact_mass, kendrick_base_exact_mass, peak_assignment_error=20.0):
+    def KendrickMassDefect(self, moiety_exact_mass, kendrick_base_exact_mass, peak_assignment_error=20.0):
 
         """
         Calculates the Kendrick mass defect for a given exact mass and kenrdick base.
@@ -144,7 +146,7 @@ class chemical_formulas(Elements):
         """
         peak_assignment_error /= 1e6
 
-        moiety_mass_defect = self.Mass_defect(moiety_exact_mass)
+        moiety_mass_defect = self.MassDefect(moiety_exact_mass)
 
         kendrick_base_integer_mass = int(np.round(kendrick_base_exact_mass))
         kendrick_normalisation_factor = kendrick_base_integer_mass / kendrick_base_exact_mass
@@ -159,14 +161,14 @@ class chemical_formulas(Elements):
         return kendrick_mass_defect, kendrick_e
 
 
-    def Element_ratios(self, moiety):
+    def ElementRatios(self, moiety):
 
         """
         Returns O:C, H:C and N:C of moiety.
         + moiety: str.
         """
 
-        counted_elements = self.Count_elements(moiety)
+        counted_elements = self.CountElements(moiety)
 
         try:
             OtoC = float(counted_elements["O"])/counted_elements["C"]
@@ -184,7 +186,7 @@ class chemical_formulas(Elements):
         return OtoC, HtoC, NtoC
 
 
-    def Is_hydrocarbon(self, moiety):
+    def IsHydrocarbon(self, moiety):
 
         """
         Returns true if moiety is a hydrocarbon.
@@ -216,7 +218,7 @@ class chemical_formulas(Elements):
         return np.round((2 * OtoC) - HtoC - (5 * NtoC), 1)
 
 
-    def element_frequency(self, list_of_formulae, elements):
+    def ElementDistributions(self, list_of_formulae, elements):
         
         """
         Calculates frequency of elements in list_of_moieties.
@@ -225,7 +227,7 @@ class chemical_formulas(Elements):
         """
 
         # convert all strings into ordered dictionaries to count elements
-        counted_moieties = [self.Count_elements(moiety) for moiety in list_of_formulae]
+        counted_moieties = [self.CountElements(moiety) for moiety in list_of_formulae]
 
         # all frequency arrays must be of the same length, so identfy the longest.
         # Count element keys and frequency of their occurence (values).
@@ -242,8 +244,132 @@ class chemical_formulas(Elements):
         for counted_moiety in counted_moieties:
             for element in elements:
                 if element in counted_moiety.keys():
-                    freq_dist.loc[counted_moiety[element], element] +=1
+                    freq_dist.loc[counted_moiety[element], element] += 1.0
                 else:
-                    freq_dist.loc[0,element] +=1
+                    freq_dist.loc[0,element] += 1.0
 
         return freq_dist
+
+
+    def ElementDistributionsPlot(self, list_of_freq_df, **kwargs):
+    
+        """
+        Displays data generated from self.ElementDistributions.
+        freq_df = dataframe of numeric index (bins) and frequency count 
+        of elements. Provided by chemical_formulas.element_frequency
+        show_0 sets xlim as either 0 or 1.
+        """
+        
+        matplotlib.rc('xtick', labelsize=20) 
+        matplotlib.rc('ytick', labelsize=20) 
+        
+        # Get biggest bin from all dataframes
+        xmax = max([df.shape[0] for df in list_of_freq_df])
+        x = np.arange(0,xmax,1)
+
+        # Get total number of elements asked for
+        elements = list(set(self._Flatten([df.columns.values for df in list_of_freq_df])))
+        element_i_key = {element: i for i, element in enumerate(elements)}
+        
+        # Start figure
+        fig, ax = plt.subplots(nrows=len(elements), figsize=(13, len(elements)*3), sharex=True)
+        fig.suptitle("Frequency of atoms");
+
+        # FREQUENCY OF ATOMS CHON LEFT PANNEL ALL ROWS
+        ncols_per_bin = len(list_of_freq_df)
+        width = (1.0/ncols_per_bin)*0.8
+        
+        # Manually compute offsets for bars
+        offsets = [0]
+        if ncols_per_bin == 2:
+            offsets = [-(width/ncols_per_bin), (width/ncols_per_bin)]
+        if ncols_per_bin == 3:
+            offsets = [-(width), 0, (width)]
+        if ncols_per_bin > 3:
+            raise ValueError("Too many datasets")
+            
+        cols = ['r','b','k']
+        # for each dataframe
+        for j, df in enumerate(list_of_freq_df):
+            # for each element in the dataframe
+            for element in list(set(df.columns)):
+                # get the index of the element to plot
+                i = element_i_key[element]
+                ax[i].grid(zorder=1);
+                ax[i].bar([x+offsets[j] for x in df.index], df[element],
+                          width=width, zorder=10, color=cols[j],
+                          label="df"+str(j), *kwargs);
+                ax[i].set_ylabel(element, rotation=0, fontsize=20);
+                ax[i].set_xlim(-1, xmax)
+
+        return ax
+
+
+
+    def OrganicCharacteristics(self, list_of_formulae):
+    
+        """
+        Calculate O:C, H:C, N:C and average OSc for a list of ions.
+        list_of_formulas = list of strings containing molecular formulas
+        returns pandas dataframe
+        """
+        
+        # initialise dataframe
+        df = pd.DataFrame({'ion' : list_of_formulae})
+        # Get unique elements in the formulaes given
+        counted_elements = list(set(self._Flatten([self.CountElements(moiety) for 
+                                                  moiety in list_of_formulae])))
+        # initialise empty element columns in dataframe
+        for element in counted_elements + ["O:C","H:C","N:C","OSc"]:
+            df[element] = 0
+        # loop over each row
+        for i, moiety in enumerate(list_of_formulae):     
+            # equivalent to one hot encoding 
+            # for elements in formula
+            ce = self.CountElements(moiety)
+            for key in ce.keys():
+                df.loc[i, key] = ce[key]         
+            # calculate element_ratios and OSc
+            OC, HC, NC = self.ElementRatios(moiety)
+            df.loc[i, ["O:C","H:C","N:C"]] = OC, HC, NC
+            if df.loc[i,'N'] == 0:
+                # ignore N:C if N not present
+                NC = 0
+            df.loc[i, "OSc"] = self.Osc(OC, HC, NC)
+        return df
+
+
+
+    def OrganicCharacteristicsPlot(self, df):
+
+        """
+        Displays data generated from self.OrganicCharacteristics.
+        df = dataframe of organic characteristics.
+        returns figure axes.
+        """
+    
+        import matplotlib
+        matplotlib.rc('xtick', labelsize=20) 
+        matplotlib.rc('ytick', labelsize=20) 
+
+        fig, ax = plt.subplots(ncols=3, figsize=(15,4));
+
+        ax[0].grid()
+        ax[1].grid()
+        ax[2].grid()
+        
+        ax[0].scatter(df["O:C"], df["H:C"]);
+        ax[1].scatter(df["C"], df["O"]);
+        ax[2].scatter(df["C"], df["OSc"]);
+        
+        ax[0].set_xlabel("O:C", fontsize=20);
+        ax[0].set_ylabel("H:C", fontsize=20);
+        ax[1].set_xlabel("nC", fontsize=20);
+        ax[1].set_ylabel("nO", fontsize=20);
+        ax[2].set_xlabel("nC", fontsize=20);
+        ax[2].set_ylabel("OSc", fontsize=20);
+        
+        plt.subplots_adjust(left=0.12, bottom=0.11, right=0.90,
+                            top=0.94, wspace=0.34, hspace=0.26);
+
+        return ax

@@ -31,6 +31,8 @@ class KMD(cf):
         except KeyError:
             print "Warning: peaklist must have ion and x0 columns.\n Reinitialise object with valid peaklist."
 
+
+
         self.out_matched_id_fname = "matched_ids_summary_" + self.fname.replace(".txt",".json")
         self.updated_peaklist_fname = "updated_" + self.fname
 
@@ -64,7 +66,7 @@ class KMD(cf):
         #                   for ith self.ion, ith suggested_compounds is the suggested error of the assignment
         # """
 
-    def Kendrick_bases_apart(self, amu1, amu2, kendrick_base_amu):
+    def KendrickBasesApart(self, amu1, amu2, kendrick_base_amu):
 
         """
         How many kendrick_base amu1 and amu2 are different from each other.
@@ -78,7 +80,7 @@ class KMD(cf):
 
         return int(ans)
 
-    def F_amu_apart(self, amu1, amu2, kendrick_base_mass):
+    def FAmuApart(self, amu1, amu2, kendrick_base_mass):
 
         """
         Returns True if difference between amu1 and
@@ -90,7 +92,7 @@ class KMD(cf):
 
         return abs(int(amu1) - int(amu2)) % int(kendrick_base_mass) == 0
 
-    def F_within_error(self, KMD1, KMD1e, KMD2, KMD2e):
+    def FWithinError(self, KMD1, KMD1e, KMD2, KMD2e):
 
         """
         Returns True if KMD1 +/- KMD1e is within KMD2 +/- KMD2e.
@@ -114,14 +116,14 @@ class KMD(cf):
 
         return type1 or type2 or type3 or type4
 
-    def Calculate_mass_defect(self):
+    def CalculateMassDefect(self):
 
         """
         Calcuates mass defects for all masses in self.peaklist
         """
-        self.peaklist["MD"] = [self.Mass_defect(mass) for mass in self.peaklist.x0]
+        self.peaklist["MD"] = [self.MassDefect(mass) for mass in self.peaklist.x0]
 
-    def Calculate_kendrick_mass_defect(self, kendrick_base):
+    def CalculateKendrickMassDefect(self, kendrick_base):
 
         """
         Calcuates Kendrick mass defects for all masses in self.peaklist.
@@ -132,7 +134,7 @@ class KMD(cf):
         kmds = []
         ekmds = []
         for exact_mass in self.peaklist["x0"]:
-            kmd, ekmd = self.Kendrick_mass_defect(exact_mass, kendrick_base_exact_mass)
+            kmd, ekmd = self.KendrickMassDefect(exact_mass, kendrick_base_exact_mass)
             kmds.append(kmd)
             ekmds.append(ekmd)
 
@@ -140,7 +142,7 @@ class KMD(cf):
         self.peaklist["e_KMD_"+kendrick_base] = ekmds
 
 
-    def Match_peaks_on_kmd(self, kendrick_base):
+    def MatchPeaksOnKmd(self, kendrick_base):
 
         """
         For each peak in peaklist.ion, the conditions for 
@@ -155,7 +157,7 @@ class KMD(cf):
         # if kendrick mass defect column isnt present then make it
 
         if "KMD_"+kendrick_base not in self.peaklist.columns:
-            self.Calculate_kendrick_mass_defect(kendrick_base)
+            self.CalculateKendrickMassDefect(kendrick_base)
 
         # set some local variables
         match_col_name = "KMD_"+kendrick_base+"_matches"
@@ -174,12 +176,12 @@ class KMD(cf):
         # of the index in the row.
         amuApart = np.zeros(shape=(df_length, df_length))
         for i, amu1 in enumerate(self.peaklist['integer_mass']):
-            amuApart[i] = [self.F_amu_apart(amu1, amu2, kendrick_base_integer_mass) for amu2 in self.peaklist['integer_mass']]
+            amuApart[i] = [self.FAmuApart(amu1, amu2, kendrick_base_integer_mass) for amu2 in self.peaklist['integer_mass']]
 
         i=0
         withinError = np.zeros(shape=(df_length, df_length))
         for KMD1, e_KMD1 in zip(self.peaklist['KMD_'+kendrick_base], self.peaklist['e_KMD_'+kendrick_base]):
-            withinError[i] = [self.F_within_error(KMD1, e_KMD1, KMD2, e_KMD2) for KMD2, e_KMD2 in zip(self.peaklist['KMD_'+kendrick_base], self.peaklist['e_KMD_'+kendrick_base])]
+            withinError[i] = [self.FWithinError(KMD1, e_KMD1, KMD2, e_KMD2) for KMD2, e_KMD2 in zip(self.peaklist['KMD_'+kendrick_base], self.peaklist['e_KMD_'+kendrick_base])]
             i += 1
 
         # combine bool arrays to matching bool array
@@ -199,7 +201,7 @@ class KMD(cf):
         self.peaklist[match_col_name] = match_column
         self.peaklist.to_csv(self.updated_peaklist_fname, sep="\t")
 
-    def Find_unknown_formula(self, known_formula, unknown_mass, kendrick_base):
+    def FindUnknownFormula(self, known_formula, unknown_mass, kendrick_base):
 
         """
         Returns estimated formula for unknown_mass 
@@ -213,14 +215,14 @@ class KMD(cf):
 
         # get mass and elements for known arguments and collate them.
         known_formula_mass = self.Mass(known_formula)
-        formula_elements = self.Count_elements(known_formula)
+        formula_elements = self.CountElements(known_formula)
         kendrick_base_exact_mass = self.Mass(kendrick_base)
-        kendrick_base_elements = self.Count_elements(kendrick_base)
+        kendrick_base_elements = self.CountElements(kendrick_base)
 
         all_elements = formula_elements.copy()
         all_elements.update(kendrick_base_elements)
 
-        kmd_units = self.Kendrick_bases_apart(known_formula_mass,
+        kmd_units = self.KendrickBasesApart(known_formula_mass,
                                               unknown_mass,
                                               kendrick_base_exact_mass)
         if not kmd_units:
@@ -246,12 +248,12 @@ class KMD(cf):
                 estimated = "error - Can't have negative subscript in formula."
             else:
                 estimated = ''.join("%s%r" % (key,val) for (key,val) in unknown_formula_elements.iteritems())
-                estimated = self.Counted_elements_to_formula(self.Count_elements(estimated))
+                estimated = self.CountedElementsToFormula(self.CountElements(estimated))
 
         return str(estimated)
 
 
-    def Output_matched_identities(self, unknown_pattern):
+    def OutputMatchedIdentities(self, unknown_pattern):
 
         """
         After matching has been performed the guess of the identity can be made.
@@ -261,10 +263,12 @@ class KMD(cf):
                 suggesting_formula : suggested_formula
             }
         }
-        If the suggesting_formula is Null/None. Then the suggesting_formula does
-        not return a sensible value after running self.Find_unknown_formula. These
-        entries are left in as they describe which unknown masses are n kendrick_bases
-        away from the other unknown masses.
+        If the suggesting_formula is Null/None then the suggesting_formula does
+        not return a sensible value after running self.Find_unknown_formula. This may
+        be because the suggesting formula is unknown hence the suggested_formula cannot
+        be known. These entries are left in as they describe which unknown masses are 
+        n kendrick_bases away from the other unknown masses.
+
         + unkown_pattern. str. Id's unknown peak names e.g. 'unknown'
         """
 
@@ -297,7 +301,7 @@ class KMD(cf):
                             # doesnt fit within the confines of 
                             # Find_unknown_formula
                             try:
-                                value = self.Find_unknown_formula(suggestor,
+                                value = self.FindUnknownFormula(suggestor,
                                                                   unknown_mass,
                                                                   kb.replace("KMD_","").replace("_matches","")
                                                                   )
@@ -469,7 +473,7 @@ class KMD(cf):
     def Run(self):
 
         """
-        Commandline interactive interface to run programme.
+        Command line interactive interface to run programme.
         """
 
         sniffer = csv.Sniffer()
@@ -477,11 +481,11 @@ class KMD(cf):
         kendrick_bases = raw_input("List your Kendrick bases: ")
         dialect = sniffer.sniff(kendrick_bases)
         kendrick_bases = kendrick_bases.split(dialect.delimiter)
-        [self.Match_peaks_on_kmd(kb.upper()) for kb in kendrick_bases]
+        [self.MatchPeaksOnKmd(kb.upper()) for kb in kendrick_bases]
         print "Updated peaklist written to {}".format(self.updated_peaklist_fname)
 
         # Output the matches as a json file
         unknown_pattern = raw_input("Enter common pattern of unknown ion names: ")
-        self.Output_matched_identities(unknown_pattern)
+        self.OutputMatchedIdentities(unknown_pattern)
         print "Matched identity summary written to {}".format(self.out_matched_id_fname)
     
