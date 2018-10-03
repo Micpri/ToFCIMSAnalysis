@@ -468,6 +468,21 @@ class KMD(cf):
 
     #     return new_peaklist
 
+    def FindDelimeter(self, string):
+
+        """
+        Returns a delimeter found in a string. 
+        If no delimeter found returns false.
+        """
+
+        sniffer = csv.Sniffer()
+        split_string = string.split()
+
+        if len(split_string) <= 1:
+            return False
+        else:
+           dialect = sniffer.sniff(string)
+           return dialect.delimiter
 
 
     def Run(self):
@@ -476,11 +491,15 @@ class KMD(cf):
         Command line interactive interface to run programme.
         """
 
-        sniffer = csv.Sniffer()
-        # Match peaks on kendrick bases
+        # Get kendrick bases
         kendrick_bases = raw_input("List your Kendrick bases: ")
-        dialect = sniffer.sniff(kendrick_bases)
-        kendrick_bases = kendrick_bases.split(dialect.delimiter)
+        delimiter = self.FindDelimeter(kendrick_bases)
+        if not delimiter:
+            kendrick_bases = [kendrick_bases]          
+        else:
+            kendrick_bases = kendrick_bases.split(delimiter)
+
+        # Match peaks on kendrick bases
         [self.MatchPeaksOnKmd(kb.upper()) for kb in kendrick_bases]
         print "Updated peaklist written to {}".format(self.updated_peaklist_fname)
 
@@ -488,4 +507,3 @@ class KMD(cf):
         unknown_pattern = raw_input("Enter common pattern of unknown ion names: ")
         self.OutputMatchedIdentities(unknown_pattern)
         print "Matched identity summary written to {}".format(self.out_matched_id_fname)
-    

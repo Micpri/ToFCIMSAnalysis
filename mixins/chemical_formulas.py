@@ -3,7 +3,7 @@ import matplotlib
 import pyteomics
 import collections
 import numpy as np
-import pandas as pd
+import pandas as pd 
 import matplotlib.pyplot as plt
 from ToFCIMSAnalysis.constants.elements import Elements
 
@@ -251,7 +251,7 @@ class chemical_formulas(Elements):
         return freq_dist
 
 
-    def ElementDistributionsPlot(self, list_of_freq_df, **kwargs):
+    def ElementDistributionsPlot(self, list_of_freq_df):
     
         """
         Displays data generated from self.ElementDistributions.
@@ -296,9 +296,8 @@ class chemical_formulas(Elements):
                 # get the index of the element to plot
                 i = element_i_key[element]
                 ax[i].grid(zorder=1);
-                ax[i].bar([x+offsets[j] for x in df.index], df[element],
-                          width=width, zorder=10, color=cols[j],
-                          label="df"+str(j), *kwargs);
+                ax[i].bar(x=[x+offsets[j] for x in df.index], height=df[element],
+                          width=width, zorder=10, color=cols[j]);
                 ax[i].set_ylabel(element, rotation=0, fontsize=20);
                 ax[i].set_xlim(-1, xmax)
 
@@ -340,36 +339,37 @@ class chemical_formulas(Elements):
 
 
 
-    def OrganicCharacteristicsPlot(self, df):
+    def OrganicCharacteristicsPlot(self, df, cmap="Blues", alphas=None, sizes=None, a=0.5):
 
         """
         Displays data generated from self.OrganicCharacteristics.
         df = dataframe of organic characteristics.
         returns figure axes.
         """
-    
+
         import matplotlib
-        matplotlib.rc('xtick', labelsize=20) 
-        matplotlib.rc('ytick', labelsize=20) 
+        matplotlib.rc('xtick', labelsize=20);
+        matplotlib.rc('ytick', labelsize=20);
 
         fig, ax = plt.subplots(ncols=3, figsize=(15,4));
 
-        ax[0].grid()
-        ax[1].grid()
-        ax[2].grid()
-        
-        ax[0].scatter(df["O:C"], df["H:C"]);
-        ax[1].scatter(df["C"], df["O"]);
-        ax[2].scatter(df["C"], df["OSc"]);
-        
+        ax[0].grid(zorder=1);
+        ax[1].grid(zorder=1);
+        ax[2].grid(zorder=1);
+
+        ax[0].scatter(df["O:C"], df["H:C"], zorder=10, alpha=a, cmap=cmap, s=sizes, c=alphas, edgecolor="k");
+        ax[1].scatter(df["C"],  df["O"],    zorder=10, alpha=a, cmap=cmap, s=sizes, c=alphas, edgecolor="k");
+        ax[2].scatter(df["C"],  df["OSc"],  zorder=10, alpha=a, cmap=cmap, s=sizes, c=alphas, edgecolor="k");
+
         ax[0].set_xlabel("O:C", fontsize=20);
         ax[0].set_ylabel("H:C", fontsize=20);
         ax[1].set_xlabel("nC", fontsize=20);
         ax[1].set_ylabel("nO", fontsize=20);
         ax[2].set_xlabel("nC", fontsize=20);
         ax[2].set_ylabel("OSc", fontsize=20);
-        
-        plt.subplots_adjust(left=0.12, bottom=0.11, right=0.90,
-                            top=0.94, wspace=0.34, hspace=0.26);
+
+        plt.subplots_adjust(left=0.12, bottom=0.11,
+                            right=0.90, top=0.94,
+                            wspace=0.34, hspace=0.26);
 
         return ax

@@ -1,0 +1,610 @@
+{
+  "<unknown0060>": {
+    "CH2": {
+      "IC9H15NO5": "C6H9INO5", 
+      "IC6H9O5": "C7H11IO5", 
+      "<unknown0092>": null
+    }
+  }, 
+  "<unknown0160>": {
+    "CH2": {}
+  }, 
+  "<unknown0044>": {
+    "CH2": {}
+  }, 
+  "<unknown0093>": {
+    "CH2": {
+      "<unknown0129>": null, 
+      "IC6H10O5": "C8H14IO5", 
+      "<unknown0062>": null
+    }
+  }, 
+  "<unknown0076>": {
+    "CH2": {
+      "<unknown0048>": null, 
+      "<unknown0011>": null
+    }
+  }, 
+  "<unknown0028>": {
+    "CH2": {}
+  }, 
+  "<unknown0152>": {
+    "CH2": {
+      "<unknown0051>": null, 
+      "<unknown0109>": null, 
+      "H14IO8": "C5H24IO8"
+    }
+  }, 
+  "<unknown0107>": {
+    "CH2": {
+      "<unknown0150>": null
+    }
+  }, 
+  "<unknown0172>": {
+    "CH2": {
+      "<unknown0131>": null, 
+      "IC6H11O6": "C11H21IO6"
+    }
+  }, 
+  "<unknown0120>": {
+    "CH2": {}
+  }, 
+  "<unknown0004>": {
+    "CH2": {}
+  }, 
+  "<unknown0027>": {
+    "CH2": {}
+  }, 
+  "<unknown0137>": {
+    "CH2": {
+      "IC6H12O6": "C8H16IO6", 
+      "C5H10IO6": "C8H16IO6"
+    }
+  }, 
+  "<unknown0057>": {
+    "CH2": {
+      "<unknown0123>": null
+    }
+  }, 
+  "<unknown0168>": {
+    "CH2": {
+      "<unknown0034>": null, 
+      "<unknown0049>": null, 
+      "H14IO8": "C7H28IO8"
+    }
+  }, 
+  "<unknown0067>": {
+    "CH2": {
+      "IC6H8O7": "C5H6IO7"
+    }
+  }, 
+  "<unknown0016>": {
+    "CH2": {
+      "<unknown0116>": null, 
+      "IC9H12N1O5": "C4H2INO5", 
+      "IC8H10O5": "C5H4IO5"
+    }
+  }, 
+  "<unknown0037>": {
+    "CH2": {
+      "<unknown0056>": null
+    }
+  }, 
+  "<unknown0061>": {
+    "CH2": {
+      "IC6H6NO7": "C4H2INO7"
+    }
+  }, 
+  "<unknown0059>": {
+    "CH2": {
+      "<unknown0045>": null
+    }
+  }, 
+  "<unknown0163>": {
+    "CH2": {}
+  }, 
+  "<unknown0045>": {
+    "CH2": {
+      "<unknown0059>": null, 
+      "<unknown0125>": null
+    }
+  }, 
+  "<unknown0029>": {
+    "CH2": {}
+  }, 
+  "<unknown0092>": {
+    "CH2": {
+      "<unknown0060>": null, 
+      "IC6H9O5": "C8H13IO5"
+    }
+  }, 
+  "<unknown0106>": {
+    "CH2": {
+      "<unknown0047>": "C23H46"
+    }
+  }, 
+  "<unknown0019>": {
+    "CH2": {
+      "<unknown0009>": null
+    }
+  }, 
+  "<unknown0080>": {
+    "CH2": {
+      "<unknown0151>": null, 
+      "CH3I2": "C4H9I2"
+    }
+  }, 
+  "<unknown0123>": {
+    "CH2": {
+      "<unknown0057>": null
+    }
+  }, 
+  "<unknown0088>": {
+    "CH2": {
+      "<unknown0118>": null, 
+      "<unknown0159>": null
+    }
+  }, 
+  "<unknown0005>": {
+    "CH2": {}
+  }, 
+  "<unknown0056>": {
+    "CH2": {
+      "<unknown0037>": null
+    }
+  }, 
+  "<unknown0143>": {
+    "CH2": {
+      "IC8H4O6": "C9H6IO6"
+    }
+  }, 
+  "<unknown0118>": {
+    "CH2": {
+      "<unknown0159>": null, 
+      "<unknown0088>": null, 
+      "C2H2IO3": "C11H20IO3"
+    }
+  }, 
+  "<unknown0011>": {
+    "CH2": {
+      "<unknown0048>": null, 
+      "<unknown0076>": null
+    }
+  }, 
+  "<unknown0081>": {
+    "CH2": {
+      "<unknown0006>": null
+    }
+  }, 
+  "<unknown0062>": {
+    "CH2": {
+      "<unknown0093>": null, 
+      "<unknown0129>": null, 
+      "IC6H10O5": "C7H12IO5"
+    }
+  }, 
+  "<unknown0162>": {
+    "CH2": {}
+  }, 
+  "<unknown0042>": {
+    "CH2": {
+      "C2H4I2NO2": "error - Can't have negative subscript in formula."
+    }
+  }, 
+  "<unknown0135>": {
+    "CH2": {
+      "<unknown0072>": null, 
+      "IC6H9O7": "C7H11IO7"
+    }
+  }, 
+  "<unknown0018>": {
+    "CH2": {}
+  }, 
+  "<unknown0105>": {
+    "CH2": {
+      "<unknown0140>": null
+    }
+  }, 
+  "<unknown0095>": {
+    "CH2": {
+      "IC6H14O4": "C9H20IO4", 
+      "<unknown0171>": null
+    }
+  }, 
+  "<unknown0170>": {
+    "CH2": {}
+  }, 
+  "<unknown0021>": {
+    "CH2": {}
+  }, 
+  "<unknown0111>": {
+    "CH2": {}
+  }, 
+  "<unknown0122>": {
+    "CH2": {}
+  }, 
+  "<unknown0119>": {
+    "CH2": {
+      "IC6H7O5": "C9H13IO5"
+    }
+  }, 
+  "<unknown0075>": {
+    "CH2": {
+      "IC6H10O8": "C4H6IO8", 
+      "C3H4IO8": "C4H6IO8", 
+      "<unknown0012>": null
+    }
+  }, 
+  "<unknown0051>": {
+    "CH2": {
+      "<unknown0152>": null, 
+      "<unknown0079>": null, 
+      "<unknown0109>": null
+    }
+  }, 
+  "<unknown0010>": {
+    "CH2": {}
+  }, 
+  "<unknown0035>": {
+    "CH2": {}
+  }, 
+  "<unknown0171>": {
+    "CH2": {
+      "IC6H14O4": "C13H28IO4", 
+      "<unknown0095>": null
+    }
+  }, 
+  "<unknown0073>": {
+    "CH2": {
+      "IC6H8O8": "C4H4IO8"
+    }
+  }, 
+  "<unknown0149>": {
+    "CH2": {
+      "IC6H4N1O4": "C10H12INO4", 
+      "IC6H12O7": "C7H14IO7", 
+      "<unknown0077>": null
+    }
+  }, 
+  "<unknown0063>": {
+    "CH2": {}
+  }, 
+  "<unknown0043>": {
+    "CH2": {}
+  }, 
+  "<unknown0094>": {
+    "CH2": {
+      "IC8H12O6": "C7H10IO6", 
+      "IC6H8O6": "C7H10IO6"
+    }
+  }, 
+  "<unknown0165>": {
+    "CH2": {
+      "IC6H5N1O7": "C7H7INO7"
+    }
+  }, 
+  "<unknown0104>": {
+    "CH2": {
+      "C6H3N3O11": "C8H7N3O11"
+    }
+  }, 
+  "<unknown0013>": {
+    "CH2": {
+      "<unknown0148>": null
+    }
+  }, 
+  "<unknown0034>": {
+    "CH2": {
+      "<unknown0168>": null, 
+      "<unknown0049>": null
+    }
+  }, 
+  "<unknown0022>": {
+    "CH2": {}
+  }, 
+  "<unknown0159>": {
+    "CH2": {
+      "<unknown0118>": null, 
+      "<unknown0088>": null
+    }
+  }, 
+  "<unknown0112>": {
+    "CH2": {}
+  }, 
+  "<unknown0125>": {
+    "CH2": {
+      "<unknown0045>": null
+    }
+  }, 
+  "<unknown0003>": {
+    "CH2": {}
+  }, 
+  "<unknown0074>": {
+    "CH2": {
+      "<unknown0140>": null
+    }
+  }, 
+  "<unknown0072>": {
+    "CH2": {
+      "<unknown0135>": null
+    }
+  }, 
+  "<unknown0087>": {
+    "CH2": {}
+  }, 
+  "<unknown0148>": {
+    "CH2": {
+      "<unknown0013>": null
+    }
+  }, 
+  "<unknown0064>": {
+    "CH2": {}
+  }, 
+  "<unknown0113>": {
+    "CH2": {}
+  }, 
+  "<unknown0140>": {
+    "CH2": {
+      "<unknown0105>": null, 
+      "<unknown0074>": null
+    }
+  }, 
+  "<unknown0164>": {
+    "CH2": {
+      "C3H5I2O2": "C4H7I2O2", 
+      "C2H3I2O2": "C4H7I2O2"
+    }
+  }, 
+  "<unknown0129>": {
+    "CH2": {
+      "<unknown0093>": null, 
+      "IC6H10O5": "C9H16IO5", 
+      "<unknown0062>": null
+    }
+  }, 
+  "<unknown0012>": {
+    "CH2": {
+      "IC8H4O6": "error - Can't have negative subscript in formula.", 
+      "<unknown0075>": null
+    }
+  }, 
+  "<unknown0033>": {
+    "CH2": {}
+  }, 
+  "<unknown0103>": {
+    "CH2": {}
+  }, 
+  "<unknown0124>": {
+    "CH2": {
+      "IC6H7O6": "C8H11IO6"
+    }
+  }, 
+  "<unknown0008>": {
+    "CH2": {}
+  }, 
+  "<unknown0023>": {
+    "CH2": {}
+  }, 
+  "<unknown0053>": {
+    "CH2": {}
+  }, 
+  "<unknown0096>": {
+    "CH2": {
+      "IC11H20O6": "C7H12IO6", 
+      "IC6H10O6": "C7H12IO6"
+    }
+  }, 
+  "<unknown0071>": {
+    "CH2": {}
+  }, 
+  "<unknown0084>": {
+    "CH2": {
+      "IC7H9O4": "C9H13IO4"
+    }
+  }, 
+  "<unknown0065>": {
+    "CH2": {}
+  }, 
+  "<unknown0127>": {
+    "CH2": {}
+  }, 
+  "<unknown0009>": {
+    "CH2": {
+      "<unknown0019>": null
+    }
+  }, 
+  "<unknown0130>": {
+    "CH2": {
+      "IC6H9NO6": "C7H11INO6"
+    }
+  }, 
+  "<unknown0167>": {
+    "CH2": {}
+  }, 
+  "<unknown0052>": {
+    "CH2": {
+      "IC6H14N1O7": "C3H8INO7", 
+      "IC12H16O5": "C7H6IO5", 
+      "IC8H8O5": "C7H6IO5"
+    }
+  }, 
+  "<unknown0147>": {
+    "CH2": {}
+  }, 
+  "<unknown0102>": {
+    "CH2": {
+      "IC6H13NO5": "C7H15INO5", 
+      "<unknown0131>": null
+    }
+  }, 
+  "<unknown0048>": {
+    "CH2": {
+      "<unknown0076>": null, 
+      "<unknown0011>": null
+    }
+  }, 
+  "<unknown0157>": {
+    "CH2": {}
+  }, 
+  "<unknown0040>": {
+    "CH2": {}
+  }, 
+  "<unknown0015>": {
+    "CH2": {
+      "C2H2IO3": "C7H12IO3"
+    }
+  }, 
+  "<unknown0024>": {
+    "CH2": {}
+  }, 
+  "<unknown0166>": {
+    "CH2": {
+      "<unknown0108>": null
+    }
+  }, 
+  "<unknown0046>": {
+    "CH2": {}
+  }, 
+  "<unknown0158>": {
+    "CH2": {
+      "<unknown0014>": null
+    }
+  }, 
+  "<unknown0115>": {
+    "CH2": {}
+  }, 
+  "<unknown0126>": {
+    "CH2": {}
+  }, 
+  "<unknown0131>": {
+    "CH2": {
+      "<unknown0102>": null, 
+      "<unknown0172>": null, 
+      "IC6H13NO5": "C8H17INO5"
+    }
+  }, 
+  "<unknown0146>": {
+    "CH2": {
+      "IC6H4O4": "C11H14IO4", 
+      "C6H3N3O12": "C8H7N3O12", 
+      "IC8H8O4": "C11H14IO4"
+    }
+  }, 
+  "<unknown0055>": {
+    "CH2": {}
+  }, 
+  "<unknown0101>": {
+    "CH2": {}
+  }, 
+  "<unknown0049>": {
+    "CH2": {
+      "<unknown0034>": null, 
+      "<unknown0168>": null, 
+      "H14IO8": "C2H18IO8"
+    }
+  }, 
+  "<unknown0150>": {
+    "CH2": {
+      "<unknown0107>": null
+    }
+  }, 
+  "<unknown0014>": {
+    "CH2": {
+      "<unknown0158>": null
+    }
+  }, 
+  "<unknown0039>": {
+    "CH2": {
+      "C13H12O10": "C10H6O10"
+    }
+  }, 
+  "<unknown0109>": {
+    "CH2": {
+      "<unknown0152>": null, 
+      "<unknown0051>": null, 
+      "H14IO8": "C4H22IO8"
+    }
+  }, 
+  "<unknown0041>": {
+    "CH2": {}
+  }, 
+  "<unknown0025>": {
+    "CH2": {}
+  }, 
+  "<unknown0079>": {
+    "CH2": {
+      "<unknown0051>": null
+    }
+  }, 
+  "<unknown0006>": {
+    "CH2": {
+      "<unknown0081>": null
+    }
+  }, 
+  "<unknown0047>": {
+    "CH2": {
+      "<unknown0106>": "C21H42"
+    }
+  }, 
+  "<unknown0090>": {
+    "CH2": {
+      "C3H6IO2": "C11H22IO2"
+    }
+  }, 
+  "<unknown0077>": {
+    "CH2": {
+      "IC6H4N1O4": "C8H8INO4", 
+      "<unknown0149>": null, 
+      "IC6H12O7": "C5H10IO7"
+    }
+  }, 
+  "<unknown0100>": {
+    "CH2": {
+      "<unknown0169>": null
+    }
+  }, 
+  "<unknown0116>": {
+    "CH2": {
+      "<unknown0016>": null, 
+      "IC9H12N1O5": "C8H10INO5", 
+      "IC8H10O5": "C9H12IO5"
+    }
+  }, 
+  "<unknown0082>": {
+    "CH2": {}
+  }, 
+  "<unknown0078>": {
+    "CH2": {}
+  }, 
+  "<unknown0136>": {
+    "CH2": {}
+  }, 
+  "<unknown0151>": {
+    "CH2": {
+      "CH3I2": "C6H13I2", 
+      "<unknown0080>": null
+    }
+  }, 
+  "<unknown0169>": {
+    "CH2": {
+      "<unknown0100>": null
+    }
+  }, 
+  "<unknown0066>": {
+    "CH2": {}
+  }, 
+  "<unknown0017>": {
+    "CH2": {}
+  }, 
+  "<unknown0038>": {
+    "CH2": {}
+  }, 
+  "<unknown0108>": {
+    "CH2": {
+      "<unknown0166>": null
+    }
+  }, 
+  "<unknown0007>": {
+    "CH2": {}
+  }
+}
