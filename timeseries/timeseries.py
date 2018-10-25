@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import scipy as sc
-import tqdm
+from tqdm import tqdm, trange
 
 class TimeSeries():
 
@@ -31,7 +31,7 @@ class TimeSeries():
         df[new_cycle_column_name] = 0
         count = 0
         # loop over every row in the dataframe
-        for i in range(len(df[mask_column_name])):
+        for i in tqdm(range(len(df[mask_column_name]))):
             index = df.index[i]
             previous_index = df.index[i-1]
     
@@ -60,7 +60,7 @@ class TimeSeries():
         raw data. Once you have this column you might need to forward fill or interpolate between the points.
         """
 
-        for mass in columns_to_bg:
+        for mass in tqdm(columns_to_bg):
             df[mass+"_bg"] = np.nan
             for i in np.arange(0, max(df[bg_cycle_column_name])):
                 # Find bg values of that bg period (i) ie where bg_cycle_column_name is bg_cycle_mask_val
@@ -86,7 +86,7 @@ class TimeSeries():
         df. pandas dataframe.
         columns_to_integrate. list of strings. columns in dataframe e.g. ['mz_230', 'mz_360']
         mask_column_name. str. name of mask column.
-        cycle_column_name. str. cycle column generated from CountCycles.
+        figaero_cycle_column_name. str. cycle column generated from CountCycles.
         figaero_integrate_mask_val. list of ints. these define the datapoints to integrate.
         gas_sample_mask_val. int. defines the period that the integrate value relates to.
         """
@@ -97,7 +97,7 @@ class TimeSeries():
         # This can either be a single int e.g. 3, when the ramp (3) is happening; or a list of ints
         # e.g. [3, 4] as we want to integrate both the ramp (3) and the soak (4).
         figaero_integrate_mask = df[mask_column_name].isin(figaero_integrate_mask_val)
-        for mass in columns_to_integrate:
+        for mass in tqdm(columns_to_integrate):
             df[mass+"_particle_integrated"] = np.nan
             for i in np.arange(0, max(df[figaero_cycle_column_name])):
 
@@ -114,3 +114,43 @@ class TimeSeries():
                 df.loc[df_index, mass+"_particle_integrated"] = integrated_values
 
         return df
+
+    def GetTMaxes(self, df, columns_to_get_tmax, mask_column_name="state_name", bad_cycles=[],
+                  thermogram_mask_val=[], figaero_cycle_column_name="figaero_cycle",
+                  temperature_column_name="temperature"):
+
+        """
+        Returns pandas dataframe of column keys and list values with elements
+        that are the max value for each cycle period.
+        df. pandas dataframe.
+        columns_to_get_tmax. list of strings. columns in dataframe e.g. ['mz_230', 'mz_360']
+        thermogram_mask_val. list of ints. these define the datapoints to integrate
+        figaero_cycle_column_name. str. cycle column generated from CountCycles.
+        temperature_column_name. str. column containing temperature data.
+        bad_cycles. list of ints. ignore getting tmax from these cycle numbers.
+        """
+
+        tmaxes = pd.DataFrame()
+        # Set the thermogram mask i.e. where the figaero integration should take place.
+        # This can either be a single int e.g. 3, when the ramp (3) is happening; or a list of ints
+        # e.g. [3, 4] as we want to integrate both the ramp (3) and the soak (4).
+        thermogram_mask = df[mask_column_name].isin(thermogram_mask_val)
+        
+        print thermogram_mask_val
+        
+        for mass in tqdm(columns_to_get_tmax):
+            ts = []
+            for i in np.arange(0, max(df[figaero_cycle_column_name])):
+                if i in bad_cycles:
+                    pass
+                else:
+                    ramp = (df[figaero_cycle_column_name] == i) & thermogram_mask
+                    thermogram_df = df[ramp].copy()
+                    thermogram_df = thermogram_df.set_index(temperature_column_name)
+                    max_point = max(thermogram_df[mass])
+                    tmax = thermogram_df[thermogram_df[mass] == max_point][mass].index.values[0]
+                    ts.append(tmax)
+            tmaxes[mass] = ts
+
+        tmaxes.index.name = figaero_cycle_column_name
+        return tmaxes
