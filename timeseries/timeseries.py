@@ -11,7 +11,7 @@ class TimeSeries():
 
     def CountCycles(self, df, mask_column_name, new_cycle_column_name,
                     last_num_in_seq, first_num_in_seq):
-    
+
         """
         This method inserts a column into a pandas dataframe. That column contains
         the cycle number i.e. the number of times a repeated pattern in a mask column
@@ -26,20 +26,15 @@ class TimeSeries():
         e.g. if the cycle goes sample(1), ramp(2), soak(3), cool(4), then
         last_num_in_seq = 4 and first_num_in_seq = 1.
         """
-    
-        # initialise new column name and a counter
-        df[new_cycle_column_name] = 0
-        count = 0
-        # loop over every row in the dataframe
-        for i in tqdm(range(len(df[mask_column_name]))):
-            index = df.index[i]
-            previous_index = df.index[i-1]
-    
-            if (df.loc[index, mask_column_name] == last_num_in_seq) & \
-                (df.loc[previous_index, mask_column_name] == first_num_in_seq):
-                count += 1
-            df.loc[index, new_cycle_column_name] = count
-    
+
+        # calculate difference in consecutive mask values
+        df[mask_column_name+'_diff'] = np.append(np.diff(df[mask_column_name]), np.array([0]));
+        # mark where the difference in sequence edges occurs with a 1
+        new_cycle = (df[mask_column_name+'_diff'] == first_num_in_seq - last_num_in_seq).astype(int) & \
+                    (df[mask_column_name] == last_num_in_seq).astype(int)
+        # cumulative sum gives the cycle number
+        df[new_cycle_column_name] = np.cumsum(new_cycle)
+
         return df
 
 
@@ -78,7 +73,7 @@ class TimeSeries():
 
 
     def IntegrateFIGAERO(self, df, columns_to_integrate, mask_column_name, figaero_cycle_column_name,
-                        figaero_integrate_mask_val, gas_sample_mask_val):
+                        figaero_integrate_mask_val, gas_sample_mask_val, bad_cycles=[]):
         """
         Integrates the datapoints in columns_to_integrate of the df where the 
         figaero_integrate_mask_val values are found in the mask_column_name column of the df.
@@ -100,20 +95,23 @@ class TimeSeries():
         for mass in tqdm(columns_to_integrate):
             df[mass+"_particle_integrated"] = np.nan
             for i in np.arange(0, max(df[figaero_cycle_column_name])):
+                if i in bad_cycles:
+                    pass
+                else:
+                    current_cycle_mask = df[figaero_cycle_column_name] == i
 
-                current_cycle_mask = df[figaero_cycle_column_name] == i
+                    current_integrate =  current_cycle_mask & figaero_integrate_mask
+                    previous_sample = current_cycle_mask & gas_sample_mask
+                    integrated_values = sc.trapz(df.loc[current_integrate, mass].values)
 
-                current_integrate =  current_cycle_mask & figaero_integrate_mask
-                previous_sample = current_cycle_mask & gas_sample_mask
-                integrated_values = sc.trapz(df.loc[current_integrate, mass].values)
-
-                first = np.where(df.index == previous_sample[previous_sample==True].index[-1])[0][0]
-                last = np.where(df.index == previous_sample[previous_sample==True].index[0])[0][0]
-                mid = first + ((last - first) / 2.0)
-                df_index = previous_sample.index[int(mid)]
-                df.loc[df_index, mass+"_particle_integrated"] = integrated_values
+                    first = np.where(df.index == previous_sample[previous_sample==True].index[-1])[0][0]
+                    last = np.where(df.index == previous_sample[previous_sample==True].index[0])[0][0]
+                    mid = first + ((last - first) / 2.0)
+                    df_index = previous_sample.index[int(mid)]
+                    df.loc[df_index, mass+"_particle_integrated"] = integrated_values
 
         return df
+
 
     def GetTMaxes(self, df, columns_to_get_tmax, mask_column_name="state_name", bad_cycles=[],
                   thermogram_mask_val=[], figaero_cycle_column_name="figaero_cycle",
@@ -130,14 +128,12 @@ class TimeSeries():
         bad_cycles. list of ints. ignore getting tmax from these cycle numbers.
         """
 
-        tmaxes = pd.DataFrame()
         # Set the thermogram mask i.e. where the figaero integration should take place.
         # This can either be a single int e.g. 3, when the ramp (3) is happening; or a list of ints
         # e.g. [3, 4] as we want to integrate both the ramp (3) and the soak (4).
         thermogram_mask = df[mask_column_name].isin(thermogram_mask_val)
-        
-        print thermogram_mask_val
-        
+                
+        tmaxes = pd.DataFrame()
         for mass in tqdm(columns_to_get_tmax):
             ts = []
             for i in np.arange(0, max(df[figaero_cycle_column_name])):
@@ -154,3 +150,75 @@ class TimeSeries():
 
         tmaxes.index.name = figaero_cycle_column_name
         return tmaxes
+
+
+    def ExtractDesorptions(self, df, columns_to_extract, mask_column_name,
+                           figaero_cycle_column_name, thermogram_mask_val,
+                           temperature_dp, bad_cycles=[]):
+        """
+        Provides a dictionary of dataframes for each mass (column) in ts df, where the
+        columns are the desorption number (taken from the figaero_cycle_column_name) 
+        with a temperature index.
+        df. pandas dataframe.
+        columns_to_extract. list of strings. columns in dataframe e.g. ['mz_230', 'mz_360']
+        bad_cycles. list of ints. ignore extracting desorptions from these cycle numbers.
+        mask_column_name. str. name of mask column.
+        figaero_cycle_column_name. str. cycle column generated from CountCycles.
+        thermogram_mask_val. list of ints. these define the datapoints in the desorption.
+        temperature_dp. int. sig fig for temperature rounding. (passed to np.round)
+        """
+        
+        def myround(x, base=1):
+            return float(base * round(float(x)/base))
+        
+        # Set the thermogram mask i.e. where the figaero integration should take place.
+        # This can either be a single int e.g. 3, when the ramp (3) is happening; or a list of ints
+        # e.g. [3, 4] as we want to integrate both the ramp (3) and the soak (4).
+        thermogram_mask = df[mask_column_name].isin(thermogram_mask_val)
+        # extract temperature data
+        temperature_data = df.loc[thermogram_mask].set_index("temperature")
+         # dictionary to store dataframes
+        desorptions = {}
+        for mass in tqdm(columns_to_extract):
+            desorptions[mass] = pd.DataFrame()        
+            # loop over figaero cycles
+            for cycle in np.unique(df[figaero_cycle_column_name])[:-1]: 
+                if cycle in bad_cycles:
+                    pass
+                else:
+                    # set the specific data we want to extract
+                    temp_data = temperature_data.loc[(temperature_data[figaero_cycle_column_name] == cycle), mass]
+                    # put that data into a temporary dataframe
+                    temp_df = pd.DataFrame({cycle:temp_data.values}, index=temp_data.index)
+                    # concatenate that into the dataframe for that mass
+                    desorptions[mass] = desorptions[mass].append(temp_df)
+
+            # reset index to get temperature as a column
+            desorptions[mass].reset_index(inplace=True)
+            # perform the rounding onthe temperature column
+            desorptions[mass]['temperature'] = [myround(x,temperature_dp) for x in desorptions[mass]['temperature']]
+            # collect rows which are rounded to the same value
+            desorptions[mass] = desorptions[mass].groupby('temperature').mean()
+                
+        return desorptions
+
+
+    def PlotExtractDesorptions(self, df, figaero_cycles_to_plot):
+    
+        """
+        Quick plots series' of thermogram data and their mean.
+        df. pandans.DataFrame. Must be of the format generated by  
+        the ExtractDesorptions() method.
+        figaero_cycles_to_plot. list of ints. 
+        """
+        
+        ax = df.interpolate().mean(axis=1).plot(zorder=10, grid=True, marker="o", color="k",
+                                              label="Mean", legend=True, figsize=(15,5));
+        ax.fill_between(df.index,
+                        y1=df.interpolate().mean(axis=1)-df.interpolate().std(axis=1),
+                        y2=df.interpolate().mean(axis=1)+df.interpolate().std(axis=1),
+                        zorder=1, alpha=0.30, color="k");
+        df[figaero_cycles_to_plot].interpolate(axis=1).plot(zorder=1, ax=ax, grid=True, marker="+", ls="--");
+        ax.set_ylabel("Counts / Hz");
+        
+        return ax
