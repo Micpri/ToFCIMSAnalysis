@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import scipy as sc
-from tqdm import tqdm, trange
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 class TimeSeries():
 
@@ -74,6 +75,7 @@ class TimeSeries():
 
     def IntegrateFIGAERO(self, df, columns_to_integrate, mask_column_name, figaero_cycle_column_name,
                         figaero_integrate_mask_val, gas_sample_mask_val, bad_cycles=[]):
+        
         """
         Integrates the datapoints in columns_to_integrate of the df where the 
         figaero_integrate_mask_val values are found in the mask_column_name column of the df.
@@ -155,6 +157,7 @@ class TimeSeries():
     def ExtractDesorptions(self, df, columns_to_extract, mask_column_name,
                            figaero_cycle_column_name, thermogram_mask_val,
                            temperature_dp, bad_cycles=[]):
+        
         """
         Provides a dictionary of dataframes for each mass (column) in ts df, where the
         columns are the desorption number (taken from the figaero_cycle_column_name) 
@@ -165,7 +168,8 @@ class TimeSeries():
         mask_column_name. str. name of mask column.
         figaero_cycle_column_name. str. cycle column generated from CountCycles.
         thermogram_mask_val. list of ints. these define the datapoints in the desorption.
-        temperature_dp. int. sig fig for temperature rounding. (passed to np.round)
+        temperature_dp. int. sig fig for temperature rounding. You will need to play with this
+        to find the best bin widths to use for your dataset.
         """
         
         def myround(x, base=1):
@@ -203,7 +207,7 @@ class TimeSeries():
         return desorptions
 
 
-    def PlotExtractDesorptions(self, df, figaero_cycles_to_plot):
+    def PlotExtractDesorptions(self, df, figaero_cycles_to_plot, ax=None):
     
         """
         Quick plots series' of thermogram data and their mean.
@@ -213,12 +217,54 @@ class TimeSeries():
         """
         
         ax = df.interpolate().mean(axis=1).plot(zorder=10, grid=True, marker="o", color="k",
-                                              label="Mean", legend=True, figsize=(15,5));
+                                                label="Mean", legend=True, figsize=(15,5));
         ax.fill_between(df.index,
                         y1=df.interpolate().mean(axis=1)-df.interpolate().std(axis=1),
                         y2=df.interpolate().mean(axis=1)+df.interpolate().std(axis=1),
                         zorder=1, alpha=0.30, color="k");
         df[figaero_cycles_to_plot].interpolate(axis=1).plot(zorder=1, ax=ax, grid=True, marker="+", ls="--");
         ax.set_ylabel("Counts / Hz");
+        
+        return ax
+
+
+    def MakeDiurnalDataset(self, df, resample_rule):
+
+        """
+        Takes time series in a pandas DataFrame with a datetime index.
+        Returns dataframe with diurnal data generated from the time series'.
+        df. pandas DataFrame. Must have datetime index.
+        resample_rule. str. Provided to df.resample(). Gives time step of 
+        returned diurnal dataframe.
+        """
+
+        diurnal = df.copy().resample(resample_rule).mean()
+        diurnal['hour'] = diurnal.index.strftime("%H:%M")
+        diurnal = diurnal.groupby('hour').describe()
+        diurnal.index = pd.DatetimeIndex(diurnal.index)
+
+        return diurnal
+
+
+    def PlotCorrelationMatrix(self, df_corr, **kwargs):
+
+        """
+        Visualise the correlations between species.
+        Returns matplotlib.pyplot Axis.
+        df_corr. pandas DataFrame. correlation DataFrame e.g. df.corr()
+        **kwargs passed to plt.pcolor().
+        """
+        
+        fig, ax = plt.subplots(figsize=(12,10));
+        pcolor = ax.pcolor(df_corr, edgecolors='k',vmin=-1,vmax=1,**kwargs);
+        cbar = plt.colorbar(mappable=pcolor,ax=ax,shrink=0.75,ticks=np.linspace(-1,1,9));
+                        
+        cbar.ax.set_ylabel('r', rotation=0, fontsize=16);
+        
+        ax.set_yticks(np.linspace(0,len(df_corr.index)-1,len(df_corr.index))+0.5);
+        ax.set_xticks(np.linspace(0,len(df_corr.columns)-1,len(df_corr.columns))+0.5);
+        
+        ax.set_yticklabels(df_corr.index);
+        ax.set_xticklabels(df_corr.columns, rotation=90);
         
         return ax

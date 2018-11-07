@@ -5,7 +5,7 @@ import collections
 import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt
-from ToFCIMSAnalysis.constants.elements import Elements
+from ToFCIMSAnalysis.elements import Elements
 
 class chemical_formulas(Elements):
 

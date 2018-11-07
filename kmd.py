@@ -3,8 +3,8 @@ import itertools
 import os
 import pandas as pd
 import numpy as np
-from ToFCIMSAnalysis.mixins.chemical_formulas import chemical_formulas as cf
-from chemspipy import ChemSpider
+from ToFCIMSAnalysis.chemical_formulas import chemical_formulas as cf
+# from chemspipy import ChemSpider
 import json
 # import time
 # import array
@@ -36,7 +36,7 @@ class KMD(cf):
         self.out_matched_id_fname = "matched_ids_summary_" + self.fname.replace(".txt",".json")
         self.updated_peaklist_fname = "updated_" + self.fname
 
-        self.cs = ChemSpider(os.environ["ChemSpiderSOAPToken"])
+        # self.cs = ChemSpider(os.environ["ChemSpiderSOAPToken"])
         
         # """
         # self.cs: str, ChemSpider instance
