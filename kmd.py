@@ -4,13 +4,15 @@ import os
 import pandas as pd
 import numpy as np
 from ToFCIMSAnalysis.chemical_formulas import chemical_formulas as cf
-# from chemspipy import ChemSpider
+from ipywidgets import widgets, interact
+from prettytable import PrettyTable
 import json
+import csv
+# from chemspipy import ChemSpider
 # import time
 # import array
 # import pyteomics
 # import sys
-import csv
 # import matplotlib.pyplot as plt
 # from pyteomics import mass
 # from itertools import cycle
@@ -29,12 +31,12 @@ class KMD(cf):
             self.peaklist = pd.read_csv(self.path + self.fname, sep="\t")[["ion","x0"]]
             self.peaklist["integer_mass"] = [int(np.round(mass)) for mass in self.peaklist["x0"]]
         except KeyError:
-            print "Warning: peaklist must have ion and x0 columns.\n Reinitialise object with valid peaklist."
-
-
+            print( "Warning: peaklist must have ion and x0 columns.\n Reinitialise object with valid peaklist.")
 
         self.out_matched_id_fname = "matched_ids_summary_" + self.fname.replace(".txt",".json")
         self.updated_peaklist_fname = "updated_" + self.fname
+
+        self.CalculateMassDefect()
 
         # self.cs = ChemSpider(os.environ["ChemSpiderSOAPToken"])
         
@@ -153,7 +155,7 @@ class KMD(cf):
         + kendrick_base. str.
         """
 
-        print "Matching Peaks on kendrick base {}".format(kendrick_base)
+        print("Matching Peaks on kendrick base {}".format(kendrick_base))
         # if kendrick mass defect column isnt present then make it
 
         if "KMD_"+kendrick_base not in self.peaklist.columns:
@@ -194,12 +196,12 @@ class KMD(cf):
         match_column = []
         for i, name in enumerate(self.peaklist['ion']):
             match_mask = list(isMatch[i,:])
-            matches = [p for p, s in itertools.izip(list(self.peaklist["ion"]), match_mask) if s]
+            matches = [p for p, s in zip(list(self.peaklist["ion"]), match_mask) if s]
             matches.remove(name)
             match_column.append(str(matches).replace("[","").replace("]","").replace("'",""))
             
         self.peaklist[match_col_name] = match_column
-        self.peaklist.to_csv(self.updated_peaklist_fname, sep="\t")
+        # self.peaklist.to_csv(self.path+self.updated_peaklist_fname, sep="\t")
 
     def FindUnknownFormula(self, known_formula, unknown_mass, kendrick_base):
 
@@ -247,7 +249,7 @@ class KMD(cf):
             if sum(1 for number in unknown_formula_elements.values() if number < 0) > 0:
                 estimated = "error - Can't have negative subscript in formula."
             else:
-                estimated = ''.join("%s%r" % (key,val) for (key,val) in unknown_formula_elements.iteritems())
+                estimated = ''.join("%s%r" % (key,val) for (key,val) in unknown_formula_elements.items())
                 estimated = self.CountedElementsToFormula(self.CountElements(estimated))
 
         return str(estimated)
@@ -272,7 +274,7 @@ class KMD(cf):
         + unkown_pattern. str. Id's unknown peak names e.g. 'unknown'
         """
 
-        print "Finding matched identities"
+        print("Finding matched identities")
         # Collect all unknown peaks in a list.
         unknowns = [name for name in self.peaklist['ion'] if unknown_pattern in name]
         # Extract from peaklist which KMDs were used.
@@ -302,16 +304,16 @@ class KMD(cf):
                             # Find_unknown_formula
                             try:
                                 value = self.FindUnknownFormula(suggestor,
-                                                                  unknown_mass,
-                                                                  kb.replace("KMD_","").replace("_matches","")
-                                                                  )
+                                                                unknown_mass,
+                                                                kb.replace("KMD_","").replace("_matches","")
+                                                                )
                             except Exception as e:
                                 value = None
                             evidence[suggestor] = value 
                 
                 matched_id_data[unknown][kb.replace("KMD_","").replace("_matches","")] = evidence
         
-        with open("./"+self.out_matched_id_fname, 'w') as fp:
+        with open("./"+self.path+self.out_matched_id_fname, 'w') as fp:
             json.dump(matched_id_data, fp, ensure_ascii=False, indent=2)
 
     # def Is_formula_realistic(self, suggested_formula):
@@ -468,6 +470,66 @@ class KMD(cf):
 
     #     return new_peaklist
 
+    def InterogateMatchedJSON(self, json_fname, show_all=True):
+
+        """
+        Provides a jupyter widget interface to quickly interogate the JSON file
+        generated using self.OutputMatchedIdentities() (which is called by the self.Run method)
+        json_fname. str. path and file name of 'matched' json file.
+        show_all. bool. default True. displays entire json file.
+        when False, displays only those entries where Suggested have 
+        a viable formula to suggest
+        """
+
+        def show_matches(base, unknown):
+
+            """
+            Subroutine. Displays matched json data in tabular format.
+            base - str. kendrick base from which matches have been made.
+            unknown - str. the unidentified peak name to which the matches have been made.
+            returns None.
+            """
+            
+            # Initialise table
+            t=PrettyTable(['Suggestor', 'Suggested'])
+            # Find matches in the JSON file
+            matches=match_pl.loc[unknown,base]
+
+            # extract the exact mass and content of matches information
+            # This can fall over when an unknown peak in the peaklist is identified and so
+            # no longer is equal to the unknown. Take this as the assignment has already been made
+            try:
+                # Extract key info for a header
+                mass=self.peaklist[self.peaklist.ion == unknown].x0.values[0]
+                length=match_pl.shape[0]
+                index=match_pl.index.get_loc(unknown)
+                # Build a table of suggesting known peaks and suggested peaks.
+                for tor, ted in matches.items():
+                    t.add_row([tor, ted])
+                # Print header
+                print("{0}/{1}\nName: {2}\nMass: {3}\nBase: {4}".format(index+1, length, unknown, mass, base))
+
+            except IndexError:
+                # Build the table
+                for tor, ted in matches.items():
+                    t.add_row([tor, '{0} has been identified.'.format(unknown)])
+            
+            # print table
+            print(t)
+            return None
+
+        # Read in JSON file
+        match_pl = pd.read_json(json_fname,orient="index").sort_index()
+        # widget to choose unknown peak to find id of.
+        w_unknown = widgets.Dropdown(options=list(match_pl.index), description='Unknown:', disabled=False);
+        # widget to choose which kendrick base to look at.
+        w_base = widgets.Dropdown(options=list(match_pl.columns.values), description='Base:', disabled=False);
+        # create widgets
+        display = interact(show_matches, base=w_base, unknown=w_unknown);
+
+        return None
+
+
     def FindDelimeter(self, string):
 
         """
@@ -492,18 +554,21 @@ class KMD(cf):
         """
 
         # Get kendrick bases
-        kendrick_bases = raw_input("List your Kendrick bases: ")
+        kendrick_bases = input("List your Kendrick bases: ")
         delimiter = self.FindDelimeter(kendrick_bases)
         if not delimiter:
             kendrick_bases = [kendrick_bases]          
         else:
             kendrick_bases = kendrick_bases.split(delimiter)
+        # need to add something in here to stop trailing white space from
+        # making the programme crash
+
 
         # Match peaks on kendrick bases
         [self.MatchPeaksOnKmd(kb.upper()) for kb in kendrick_bases]
-        print "Updated peaklist written to {}".format(self.updated_peaklist_fname)
+        print("Updated peaklist written to {}".format(self.path+self.updated_peaklist_fname))
 
         # Output the matches as a json file
-        unknown_pattern = raw_input("Enter common pattern of unknown ion names: ")
+        unknown_pattern = input("Enter common pattern of unknown ion names: ")
         self.OutputMatchedIdentities(unknown_pattern)
-        print "Matched identity summary written to {}".format(self.out_matched_id_fname)
+        print("Matched identity summary written to {}".format(self.path+self.out_matched_id_fname))

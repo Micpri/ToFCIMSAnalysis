@@ -16,7 +16,7 @@ class TimeSeries():
         """
         This method inserts a column into a pandas dataframe. That column contains
         the cycle number i.e. the number of times a repeated pattern in a mask column
-        of the dataframe that is repeated. This is used to count FIGAERO cycles and
+        of the dataframe is repeated. This is typically used to count FIGAERO cycles and
         background cylces.
         df. pd.DataFrame. pandas dataframe containing time series data.
         mask_column_name. str. The name of the mask column in the df that contains the 
@@ -66,7 +66,6 @@ class TimeSeries():
                     mn = np.nanmin(bg_values)
                 else:
                     mn = np.nanmean(bg_values)
-
                 # put in dataframe
                 df.loc[(df[bg_cycle_column_name] == i) & (df[mask_column_name] == bg_cycle_mask_val), mass+"_bg"] = mn
 
@@ -101,11 +100,9 @@ class TimeSeries():
                     pass
                 else:
                     current_cycle_mask = df[figaero_cycle_column_name] == i
-
-                    current_integrate =  current_cycle_mask & figaero_integrate_mask
+                    current_integrate = current_cycle_mask & figaero_integrate_mask
                     previous_sample = current_cycle_mask & gas_sample_mask
                     integrated_values = sc.trapz(df.loc[current_integrate, mass].values)
-
                     first = np.where(df.index == previous_sample[previous_sample==True].index[-1])[0][0]
                     last = np.where(df.index == previous_sample[previous_sample==True].index[0])[0][0]
                     mid = first + ((last - first) / 2.0)
@@ -149,14 +146,14 @@ class TimeSeries():
                     tmax = thermogram_df[thermogram_df[mass] == max_point][mass].index.values[0]
                     ts.append(tmax)
             tmaxes[mass] = ts
-
         tmaxes.index.name = figaero_cycle_column_name
+        
         return tmaxes
 
 
     def ExtractDesorptions(self, df, columns_to_extract, mask_column_name,
                            figaero_cycle_column_name, thermogram_mask_val,
-                           temperature_dp, bad_cycles=[]):
+                           temperature_dp, temperature_column_name, bad_cycles=[]):
         
         """
         Provides a dictionary of dataframes for each mass (column) in ts df, where the
@@ -173,14 +170,16 @@ class TimeSeries():
         """
         
         def myround(x, base=1):
-            return float(base * round(float(x)/base))
-        
+            if np.isnan(x):
+                return np.nan
+            else:
+                return float(base * round(float(x)/base))
         # Set the thermogram mask i.e. where the figaero integration should take place.
         # This can either be a single int e.g. 3, when the ramp (3) is happening; or a list of ints
         # e.g. [3, 4] as we want to integrate both the ramp (3) and the soak (4).
         thermogram_mask = df[mask_column_name].isin(thermogram_mask_val)
         # extract temperature data
-        temperature_data = df.loc[thermogram_mask].set_index("temperature")
+        temperature_data = df.loc[thermogram_mask].set_index(temperature_column_name)
          # dictionary to store dataframes
         desorptions = {}
         for mass in tqdm(columns_to_extract):
@@ -196,18 +195,17 @@ class TimeSeries():
                     temp_df = pd.DataFrame({cycle:temp_data.values}, index=temp_data.index)
                     # concatenate that into the dataframe for that mass
                     desorptions[mass] = desorptions[mass].append(temp_df)
-
             # reset index to get temperature as a column
             desorptions[mass].reset_index(inplace=True)
-            # perform the rounding onthe temperature column
+            # perform the rounding on the temperature column
             desorptions[mass]['temperature'] = [myround(x,temperature_dp) for x in desorptions[mass]['temperature']]
             # collect rows which are rounded to the same value
             desorptions[mass] = desorptions[mass].groupby('temperature').mean()
-                
+
         return desorptions
 
 
-    def PlotExtractDesorptions(self, df, figaero_cycles_to_plot, ax=None):
+    def PlotExtractDesorptions(self, df, figaero_cycles_to_plot=[], ax=None):
     
         """
         Quick plots series' of thermogram data and their mean.
@@ -222,7 +220,11 @@ class TimeSeries():
                         y1=df.interpolate().mean(axis=1)-df.interpolate().std(axis=1),
                         y2=df.interpolate().mean(axis=1)+df.interpolate().std(axis=1),
                         zorder=1, alpha=0.30, color="k");
-        df[figaero_cycles_to_plot].interpolate(axis=1).plot(zorder=1, ax=ax, grid=True, marker="+", ls="--");
+        if not figaero_cycles_to_plot:
+            df.interpolate(axis=1).plot(zorder=1, ax=ax, grid=True, marker="+", ls="--");
+        else:
+            df[figaero_cycles_to_plot].interpolate(axis=1).plot(zorder=1, ax=ax, grid=True, marker="+", ls="--");
+        
         ax.set_ylabel("Counts / Hz");
         
         return ax
@@ -257,13 +259,10 @@ class TimeSeries():
         
         fig, ax = plt.subplots(figsize=(12,10));
         pcolor = ax.pcolor(df_corr, edgecolors='k',vmin=-1,vmax=1,**kwargs);
-        cbar = plt.colorbar(mappable=pcolor,ax=ax,shrink=0.75,ticks=np.linspace(-1,1,9));
-                        
+        cbar = plt.colorbar(mappable=pcolor,ax=ax,shrink=0.75,ticks=np.linspace(-1,1,9));    
         cbar.ax.set_ylabel('r', rotation=0, fontsize=16);
-        
         ax.set_yticks(np.linspace(0,len(df_corr.index)-1,len(df_corr.index))+0.5);
         ax.set_xticks(np.linspace(0,len(df_corr.columns)-1,len(df_corr.columns))+0.5);
-        
         ax.set_yticklabels(df_corr.index);
         ax.set_xticklabels(df_corr.columns, rotation=90);
         

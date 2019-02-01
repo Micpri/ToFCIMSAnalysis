@@ -57,7 +57,7 @@ class chemical_formulas(Elements):
             else:
                 if len(number) == 0:
                     number = 1
-                ls.append((unicode(pair[0]), int(number)))
+                ls.append((pair[0], int(number)))
 
         dic = collections.OrderedDict(sorted(dict(ls).items(), key=lambda x: x[0]))
         return dic
@@ -86,6 +86,25 @@ class chemical_formulas(Elements):
         return string
 
 
+    def editFormula(self, moiety, element, amount):
+        
+        """
+        Edit a chemical formula string.
+        moiety. str. of chemical formula.
+        element. str. element in moiety.
+        amount. int. value to change element number by (can be negative).
+        returns edited moiety str.
+        
+        """
+        counted_moiety = self.CountElements(moiety)
+        if element in counted_moiety.keys():
+            counted_moiety[element] = counted_moiety[element] + amount
+        else:
+            counted_moiety[element] = amount
+        edited_moiety = self.CountedElementsToFormula(counted_moiety)
+        return edited_moiety
+
+
     def RemoveReagentIon(self, formula):
 
         """
@@ -101,7 +120,7 @@ class chemical_formulas(Elements):
     def AddReagentIon(self, formula, reagent_ion):
 
         """
-        Takes a chemical formula string and removes the reagent ion.
+        Takes a chemical formula string and adds the reagent ion.
         Reagent ion (X) must be succeeded by a . then the formula.
         e.g. I.C6H6O6, NO3.C12H18O6
         + formula: str.
@@ -119,7 +138,7 @@ class chemical_formulas(Elements):
 
         counted_elements = self.CountElements(moiety)
         exact_mass = 0
-        for key, value in counted_elements.iteritems():            
+        for key, value in counted_elements.items():            
             exact_mass += (self.GetMass(key) * value)
         return round(exact_mass, 6)
 
@@ -203,7 +222,7 @@ class chemical_formulas(Elements):
         return ishydrocarbon
 
 
-    def Osc(self, OtoC, HtoC, NtoC=0):
+    def OSc(self, OtoC, HtoC, NtoC=0):
         
         """
         Calcuate average carbon oxidation state.
@@ -215,8 +234,31 @@ class chemical_formulas(Elements):
         + NtoC: float.
         """
 
-        return np.round((2 * OtoC) - HtoC - (5 * NtoC), 1)
+        if np.isnan(NtoC):
+            osc = np.round((2 * OtoC) - HtoC, 5)
+        else:
+            osc = np.round((2 * OtoC) - HtoC - (5 * NtoC), 5)
+            
+        return osc
+    
 
+    def Dbe(self, moiety):
+
+        """
+        Calculate the double bond equivalent.
+        i.e. the degree of saturation.
+        moiety. str. 
+        returns. float. dbe
+        """
+
+        counted = self.CountElements(moiety)
+        dbe = counted['C'] + 1 - (counted['H']/2.)
+
+        for X in ["Cl","Br","F"]:
+            if X in counted.keys():
+                dbe -= (counted[X]/2.)
+
+        return dbe
 
     def ElementDistributions(self, list_of_formulae, elements):
         
@@ -251,12 +293,13 @@ class chemical_formulas(Elements):
         return freq_dist
 
 
-    def ElementDistributionsPlot(self, list_of_freq_df):
+    def ElementDistributionsPlot(self, list_of_freq_df, ignore_0=False):
     
         """
         Displays data generated from self.ElementDistributions.
         freq_df = dataframe of numeric index (bins) and frequency count 
         of elements. Provided by chemical_formulas.element_frequency
+        ignore_0. choose to not display elements with high frequency at 0 elements
         show_0 sets xlim as either 0 or 1.
         """
         
@@ -288,7 +331,7 @@ class chemical_formulas(Elements):
         if ncols_per_bin > 3:
             raise ValueError("Too many datasets")
             
-        cols = ['r','b','k']
+        cols = ['b','r','g']
         # for each dataframe
         for j, df in enumerate(list_of_freq_df):
             # for each element in the dataframe
@@ -330,11 +373,8 @@ class chemical_formulas(Elements):
                 df.loc[i, key] = ce[key]         
             # calculate element_ratios and OSc
             OC, HC, NC = self.ElementRatios(moiety)
-            df.loc[i, ["O:C","H:C","N:C"]] = OC, HC, NC
-            if df.loc[i,'N'] == 0:
-                # ignore N:C if N not present
-                NC = 0
-            df.loc[i, "OSc"] = self.Osc(OC, HC, NC)
+            osc = self.OSc(OC, HC, NC)
+            df.loc[i, ["O:C","H:C","N:C","OSc"]] = OC, HC, NC, osc
         return df
 
 
@@ -373,3 +413,91 @@ class chemical_formulas(Elements):
                             wspace=0.34, hspace=0.26);
 
         return ax
+
+
+
+
+    def OrganicCharacteristicsPlotMulti(self, list_of_dfs, cmap="Blues", list_of_s=None, list_of_c=None, a=0.5):
+
+        """
+        Displays data generated from self.OrganicCharacteristics.
+        list_of_dfs = list of dataframe of organic characteristics.
+        returns figure axes.
+        """
+
+        if len(list_of_dfs) > 3:
+            raise ValueError("Too many dataframes in list_of_dfs. Maximum allowed is 3.")
+
+        import matplotlib
+        matplotlib.rc('xtick', labelsize=20);
+        matplotlib.rc('ytick', labelsize=20);
+
+        fig, ax = plt.subplots(ncols=3, figsize=(25, 6));
+
+        ax[0].grid(zorder=1);
+        ax[1].grid(zorder=1);
+        ax[2].grid(zorder=1);
+
+        ax[0].set_xlabel("O:C", fontsize=20);
+        ax[0].set_ylabel("H:C", fontsize=20);
+        ax[1].set_xlabel("nC", fontsize=20);
+        ax[1].set_ylabel("nO", fontsize=20);
+        ax[2].set_xlabel("nC", fontsize=20);
+        ax[2].set_ylabel("OSc", fontsize=20);
+
+        cols = ['Blues','Reds','Greens']
+        # for each dataframe
+        for j, df in enumerate(list_of_dfs):
+
+            try:
+                s=list_of_s[j]        
+            except TypeError:
+                s=None
+                
+            try:
+                c=list_of_c[j]        
+            except TypeError:
+                c=None#[0]*len(df)
+            
+            col=cols[j]
+            
+            ax[0].scatter(df["O:C"], df["H:C"], zorder=10, alpha=a, c=c, cmap=col, s=s, edgecolor="k");
+            ax[1].scatter(df["C"],  df["O"],    zorder=10, alpha=a, c=c, cmap=col, s=s, edgecolor="k");
+            ax[2].scatter(df["C"],  df["OSc"],  zorder=10, alpha=a, c=c, cmap=col, s=s, edgecolor="k");
+
+        plt.subplots_adjust(left=0.12, bottom=0.11, right=0.90, top=0.94, wspace=0.34, hspace=0.26);
+
+        return ax
+
+
+
+
+    def findDimers(self, list_of_formulae):
+
+        """
+        takes a list of formulas and checks to see if monomer / dimer
+        pairs are present. Calculated by checking even number of C and H.
+        Then dividing C number by 2 and H +2 / 2. to guess the formula of the
+        potential monomer.
+        Only tested on CHO compounds.
+        list_of_formulae. list. of strings.
+        returns dictionary of potential_monomer keys and potential dimer values.
+        """
+
+        dictionary = {}
+        for potential_dimer in list_of_formulae:
+            
+            counted_potential_dimer = self.CountElements(potential_dimer)
+            
+            # check to see C count is even and H count is even
+            if (counted_potential_dimer["C"] % 2 == 0) and (counted_potential_dimer["H"] % 2 == 0): 
+                
+                # workout the structure of the potential monomer
+                counted_potential_dimer["C"] = int(counted_potential_dimer["C"] / 2)
+                counted_potential_dimer['H'] = int((counted_potential_dimer['H'] + 2) / 2)
+                potential_monomer = self.CountedElementsToFormula(counted_potential_dimer)
+
+                if potential_monomer in list_of_formulae:
+                    dictionary[potential_monomer] = potential_dimer    
+            
+        return dictionary
