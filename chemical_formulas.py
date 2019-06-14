@@ -331,7 +331,7 @@ class chemical_formulas(Elements):
         if ncols_per_bin > 3:
             raise ValueError("Too many datasets")
             
-        cols = ['b','r','g']
+        cols = ['b','r','k']
         # for each dataframe
         for j, df in enumerate(list_of_freq_df):
             # for each element in the dataframe
