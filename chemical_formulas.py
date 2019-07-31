@@ -254,7 +254,7 @@ class chemical_formulas(Elements):
         counted = self.CountElements(moiety)
         dbe = counted['C'] + 1 - (counted['H']/2.)
 
-        if "N" in counted.keys()
+        if "N" in counted.keys():
             dbe += (counted["N"]/2.)
         
         for X in ["Cl","Br","F"]:
