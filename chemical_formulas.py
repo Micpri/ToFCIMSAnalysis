@@ -48,7 +48,7 @@ class chemical_formulas(Elements):
         """
 
         ls = []
-        found = re.findall(r'([A-Z][a-z]*)(\d*)', moiety)
+        found = re.findall(r'([A-Z][a-z]*)(\d+\.\d+)', moiety)
         for pair in found:
             letter = pair[0]
             number = pair[1]
@@ -57,7 +57,7 @@ class chemical_formulas(Elements):
             else:
                 if len(number) == 0:
                     number = 1
-                ls.append((pair[0], int(number)))
+                ls.append((pair[0], number))
 
         dic = collections.OrderedDict(sorted(dict(ls).items(), key=lambda x: x[0]))
         return dic
