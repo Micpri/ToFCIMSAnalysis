@@ -48,7 +48,7 @@ class chemical_formulas(Elements):
         """
 
         ls = []
-        found = re.findall(r'([A-Z][a-z]*)(\d+\.\d+)', moiety)
+        found = re.findall(r'([A-Z][a-z]*)(\d+)*', moiety)
         for pair in found:
             letter = pair[0]
             number = pair[1]
